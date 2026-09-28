@@ -1,0 +1,20 @@
+{
+  "pass": 15,
+  "checks": [
+    "hit count 1",
+    "actual damage equals displayed total 1",
+    "hit count 10",
+    "actual damage equals displayed total 10",
+    "set level15 has18 strikes",
+    "independent overlapping summons",
+    "both summons finish",
+    "summon is not collision entity",
+    "guaranteed normal stun without passive",
+    "storm radius20pct",
+    "storm cooldown5",
+    "lancer cooldown2",
+    "boss stun .12",
+    "stun respects immunity",
+    "old internal ID retains save"
+  ]
+}

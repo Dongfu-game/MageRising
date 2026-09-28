@@ -1,0 +1,48 @@
+{
+  "version": "0.3.2",
+  "pass": 30,
+  "results": [
+    "첫 단계 HP 유지",
+    "1~1000 단계 HP 유한·단조 증가",
+    "기존보다 HP 하락 없음 S5",
+    "기존보다 HP 하락 없음 S10",
+    "기존보다 HP 하락 없음 S20",
+    "기존보다 HP 하락 없음 S21",
+    "기존보다 HP 하락 없음 S30",
+    "기존보다 HP 하락 없음 S50",
+    "기존보다 HP 하락 없음 S75",
+    "20/21단계 목표 보정",
+    "75단계 이후 원래 곡선",
+    "플레이어 강화·장비에 따라 적 HP 변동 없음",
+    "강화비 유지",
+    "지팡이 성장 유지",
+    "일반 적 생성 HP 반영",
+    "보스 생성 HP 반영",
+    "보스 현재/최대 HP 표시",
+    "일반 HP 표시 복귀",
+    "READY 게이지 완충",
+    "빈 슬롯 게이지",
+    "장착 CD 게이지 0",
+    "CD 절반 게이지",
+    "긴 잔여 CD 안전 클램프",
+    "시전 상태",
+    "별도 시전 바 진행",
+    "화면 갱신만으로 시간 진행 안 함",
+    "발사 후 CD 초기화",
+    "현재 버전 저장·진행 보존",
+    "21단계 보스 즉사 방지·생존 처치",
+    "새 시작 강화 포함 1단계 생존 클리어"
+  ],
+  "bossSimulation": {
+    "assumptions": "Lv160, Energy10/Piercing5/Fire10/Ice4, unique S10 staff, 389 HP, 3% cast/CD, S10 helmet; boss starts in range, no minions.",
+    "dps": 70487.05585446127,
+    "seconds": 6.600000000000026,
+    "remainingHP": 389
+  },
+  "early": {
+    "seconds": 218,
+    "stage": 2,
+    "powerLevel": 25
+  },
+  "limitations": "Node VM actual game + Canvas; browser/mobile layout not tested."
+}

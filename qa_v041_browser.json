@@ -1,0 +1,21 @@
+{
+  "pass": 15,
+  "checks": [
+    "320x480 portrait bounds",
+    "320x480 paused scroll menu",
+    "320x568 portrait bounds",
+    "320x568 paused scroll menu",
+    "360x640 portrait bounds",
+    "360x640 paused scroll menu",
+    "390x740 portrait bounds",
+    "390x740 paused scroll menu",
+    "412x915 portrait bounds",
+    "412x915 paused scroll menu",
+    "690x840 portrait bounds",
+    "690x840 paused scroll menu",
+    "840x960 portrait bounds",
+    "840x960 paused scroll menu",
+    "no browser JS exceptions"
+  ],
+  "notes": "Headless Chromium viewport emulation; not physical Fold hardware"
+}

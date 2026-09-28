@@ -1,0 +1,13 @@
+{
+  "pass": 8,
+  "checks": [
+    "different slots blocked",
+    "rejected absorb preserves state",
+    "different slot absent from picker",
+    "same slot present in picker",
+    "same slot equipped base allowed",
+    "existing and material XP conserved",
+    "only selected material consumed",
+    "equipped material excluded"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "pass": 25,
+  "checks": [
+    "total damage flameExplosion Lv1",
+    "total damage flameExplosion Lv10",
+    "total damage meteor Lv1",
+    "total damage meteor Lv10",
+    "total damage blizzard Lv1",
+    "total damage blizzard Lv10",
+    "meteor delayed impact",
+    "meteor impact occurs",
+    "blizzard third tick freezes",
+    "blizzard does not refresh own freeze",
+    "leaving area avoids damage",
+    "entering area receives tick",
+    "nova level10 slow",
+    "chain level10 hits13",
+    "three arrows",
+    "arrows damage",
+    "canvas renders magicArrow",
+    "canvas renders arcaneBurst",
+    "canvas renders meteor",
+    "canvas renders flameExplosion",
+    "canvas renders iceSpear",
+    "canvas renders blizzard",
+    "reset cancels pending damage",
+    "old skill ids preserved",
+    "DOT tooltip present"
+  ],
+  "notes": "Logic and Canvas harness; actual mobile UI untested"
+}
