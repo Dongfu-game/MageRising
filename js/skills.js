@@ -11,13 +11,13 @@ window.MAGE_SKILLS=(()=>{
  passive('overcharge','과충전','energy','공유 4칸 충전 시 룬 파동 · 피해 룬 1회의 1+0.4×Lv배, 반경 1.3배 · 버스트는 게이지를 보존하고 강제 발동 · 룬 없으면 다음 에너지 공격 +25%×Lv');
  active('arcaneBurst','Arcane Burst','energy',3,5,12,190,10,'압축 마력 단발 광역 폭발 · 장판/상태이상 없음 · 활성 룬의 과충전 즉시 발동');
  active('fireball','Fireball','fire',1,1.2,1.25,60,11,'착탄 폭발과 3초 화상');
- passive('blaze','맹화','fire','레벨당 화상 지속 +0.4초, 최대 중첩 +1');
- active('flameExplosion','Flame Tornado','fire',2,3,2,105,12,'지속 화염 회오리 · 레벨당 지속 +0.1초');
+ passive('blaze','맹화','fire','레벨당 화상 지속 +0.4초 · 화상 최대 3단계: ×1 / ×1.2 / ×2 · 재부여 시 시간 갱신');
+ active('flameExplosion','Ifrit','fire',2,3,2,105,12,'이프리트 3차 공격: 회오리 1→2→3개 · 직접 피해 중복 없음 · 회오리별 화상 중첩 · 길막 없음');
  passive('spread','연소 확산','fire','화상 적 사망 시 주변에 가장 강한 화상 전염 · 레벨당 반경 +15');
  active('meteor','Meteor','fire',3,7,8.5,165,7,'운석 충돌 + 3초 불바닥');
  active('iceBolt','Ice Bolt','ice',1,1.3,1.1,40,2,'냉기탄 · 적을 잠시 둔화');
  passive('cold','혹한','ice','3회 적중 시 빙결 · 레벨당 둔화/빙결 강화');
- active('iceSpear','Frost Nova','ice',2,3.5,4,130,2,'대상 중심 냉기 파동 · 범위 둔화와 파쇄');
+ active('iceSpear','Frost Guardian','ice',2,3.5,4,130,2,'눈사람 정령 · 3회 눈송이 공격 · 범위 80→100→120% · 피해 비중 1:1:1.5 · 냉기 중첩/파쇄 · 길막 없음');
  passive('shatter','빙결 파쇄','ice','빙결 적에게 레벨당 25% 추가 냉기 피해 후 빙결 해제');
  active('blizzard','Blizzard','ice',3,8,3,155,3,'지속 눈보라 · 3틱 적중 시 빙결 · 파쇄 미발동');
  active('lightning','Chain Lightning','lightning',1,1.1,1.2,125,4,'최초 대상 포함 4명 · 레벨마다 연쇄 대상 +1명, 투자 Lv.10 13명 · 세트 Lv.15 18명 · 전이당 피해 10% 감소, 최초 피해의 최소 50%');

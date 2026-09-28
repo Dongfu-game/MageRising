@@ -3,7 +3,7 @@
 const C=MAGE_CONFIG,I=MAGE_ITEMS,S=MAGE_SKILLS,$=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d');
 const TAU=Math.PI*2, testMode=new URLSearchParams(location.search).has('test');
 const blankLevels=()=>({damage:0,cast:0,cooldown:0,range:0});
-const fresh=()=>({version:5,contentVersion:50,inventorySort:'newest',dropChests:[],fragments:[0,0,0],forgeCount:0,gachaSeconds:0,gachaDraws:0,skinId:'default',powerLevel:0,skillLevels:S.blank(),activeSlots:['energyBolt',null,null],cooldowns:{},bossCleared:[],fullSetPending:[],fullSetClaimed:[],energyCasts:0,migration:null,recommendMode:'balanced',uniqueClaimed:[],uniqueChests:[],shield:0,tier:0,levels:Array.from({length:10},blankLevels),gold:C.startGold,stage:1,best:1,kills:0,bossActive:false,hp:100,inventory:[],equipped:{},drops:0,totalKills:0,deaths:0,dead:false,started:false,sound:false,lowFX:matchMedia('(prefers-reduced-motion: reduce)').matches});
+const fresh=()=>({version:5,contentVersion:51,inventorySort:'newest',dropChests:[],fragments:[0,0,0],forgeCount:0,gachaSeconds:0,gachaDraws:0,skinId:'default',powerLevel:0,skillLevels:S.blank(),activeSlots:['energyBolt',null,null],cooldowns:{},bossCleared:[],fullSetPending:[],fullSetClaimed:[],energyCasts:0,migration:null,recommendMode:'balanced',uniqueClaimed:[],uniqueChests:[],shield:0,tier:0,levels:Array.from({length:10},blankLevels),gold:C.startGold,stage:1,best:1,kills:0,bossActive:false,hp:100,inventory:[],equipped:{},drops:0,totalKills:0,deaths:0,dead:false,started:false,sound:false,lowFX:matchMedia('(prefers-reduced-motion: reduce)').matches});
 let state=fresh(),storageOK=true;
 function validate(v){
  if(!v||![1,2,3,4,5].includes(v.version))throw Error('지원하지 않는 저장 파일입니다.');
@@ -43,10 +43,11 @@ function validate(v){
  clean.skinId=C.skins.some(s=>s.id===v.skinId)?v.skinId:'default';
  return clean;
 }
-let loadError='',protectSave=false;try{const raw=localStorage.getItem(C.saveKey);if(raw){const parsed=JSON.parse(raw);if(parsed.version===5&&(parsed.contentVersion||0)<50)localStorage.setItem(C.saveKey+'-pre-v050-backup',raw);if(parsed.version===5&&!parsed.contentVersion)localStorage.setItem(C.saveKey+'-pre-v040-backup',raw);if(parsed.version<5)localStorage.setItem(C.saveKey+'-pre-v030-backup',raw);state=validate(parsed);}}catch(e){loadError='저장 데이터를 읽지 못했습니다. 원본은 보호됩니다. 설정에서 백업을 가져와 주세요.';storageOK=false;protectSave=true;}
+let loadError='',protectSave=false;try{const raw=localStorage.getItem(C.saveKey);if(raw){const parsed=JSON.parse(raw);if(parsed.version===5&&(parsed.contentVersion||0)<51)localStorage.setItem(C.saveKey+'-pre-v051-backup',raw);if(parsed.version===5&&(parsed.contentVersion||0)<50)localStorage.setItem(C.saveKey+'-pre-v050-backup',raw);if(parsed.version===5&&!parsed.contentVersion)localStorage.setItem(C.saveKey+'-pre-v040-backup',raw);if(parsed.version<5)localStorage.setItem(C.saveKey+'-pre-v030-backup',raw);state=validate(parsed);}}catch(e){loadError='저장 데이터를 읽지 못했습니다. 원본은 보호됩니다. 설정에서 백업을 가져와 주세요.';storageOK=false;protectSave=true;}
 let orientationBlocked=false;const menuPositions={};
 let slotSignature=null,castingId=null,roundRobin=0,scheduled=[],enemies=[],effects=[],particles=[],texts=[],time=0,spawnClock=.1,pendingSpawn=0,phase='cast',phaseLeft=.2,phaseTotal=.2,manualPause=false,tab='magic',bulk='1',enemyID=0,newItems=0,lastSave=0,lastUI=0,lastTS=0,toastTimer,bannerTimer,shake=0,audioCtx;
 const hero={x:185,y:280};
+const summonEpoch={flameExplosion:0,iceSpear:0};
 let runeActive=false,runeClock=0,lastRunePulse=-100,lastOvercharge=-100,waveCount=0;
 const skinImages=new Map();let skinCardsSignature='';
 function skinConfig(id=state.skinId){return C.skins.find(s=>s.id===id)||C.skins[0];}
@@ -74,12 +75,13 @@ function character(v,eq=v.equipped){
 function spellStats(id,v=state,eq=v.equipped){const n=S.byId[id]||S.byId.energyBolt,c=character(v,eq),invested=v.skillLevels[n.id]||0,bonusLevel=invested?I.setLevels(c.setCounts[n.family]):0,level=Math.max(1,invested)+bonusLevel,synergy=S.synergy(v.skillLevels,n.id),setDamage=c.setCounts[n.family]>=2?.1:0,cosmic=n.family==='cosmic'?(v.skillLevels.singularity||0):0;
  const amplification=n.family==='energy'?.05*(v.skillLevels.piercing||0):0;
  const unit=c.magicPower*c.magicAtk*(1+.15*(level-1))*(1+.1*cosmic)*(1+synergy+setDamage+amplification);
- const duration=id==='flameExplosion'?2+.1*(level-1):id==='blizzard'?3+.2*(level-1):id==='meteor'||id==='chainLightning'?3:id==='thunderstorm'?4:0;
+ const tornadoDuration=.8*(2+.1*(level-1));
+ const duration=id==='flameExplosion'?1.6+tornadoDuration:id==='iceSpear'?2.4:id==='blizzard'?3+.2*(level-1):id==='meteor'||id==='chainLightning'?3:id==='thunderstorm'?4:0;
  const directCoef=['flameExplosion','blizzard','chainLightning'].includes(id)?0:n.coef,dotCoef=id==='chainLightning'?0:id==='thunderstorm'?2.5875:id==='blizzard'?3:['meteor','flameExplosion'].includes(id)?2:0;
  const hitCount=id==='chainLightning'?level+3:0,hitDamage=id==='chainLightning'?c.magicPower*c.magicAtk*(1+synergy+setDamage)*n.coef:0;
  const runeInterval=id==='magicArrow'?Math.max(.5,1.2-.05*(level-1)):0;
  const damage=unit*directCoef,dotDps=unit*dotCoef,totalDamage=hitCount?hitDamage*hitCount:damage+dotDps*duration,cast=n.cast*(1-c.castReduction),cooldown=n.cd*(1-c.cdr);
- return{...c,damage,dotDps,duration,totalDamage,hitCount,hitDamage,runeInterval,amplification,invested,bonusLevel,synergy,setDamage,level,cast,cooldown,interval:cast+cooldown,radius:n.radius*(1+c.rangeBonus+.08*cosmic+(n.family==='cosmic'&&c.setCounts.cosmic>=5?.2:0)),dps:totalDamage*(1+c.crit*(c.critMult-1))/(runeInterval||cast+cooldown)};}
+ return{...c,damage,dotDps,duration,totalDamage,hitCount,hitDamage,runeInterval,tornadoDuration,amplification,invested,bonusLevel,synergy,setDamage,level,cast,cooldown,interval:cast+cooldown,radius:n.radius*(1+c.rangeBonus+.08*cosmic+(n.family==='cosmic'&&c.setCounts.cosmic>=5?.2:0)),dps:totalDamage*(1+c.crit*(c.critMult-1))/(runeInterval||cast+cooldown)};}
 
 function combinedStats(v,eq=v.equipped){const ids=v.activeSlots.filter(Boolean),c=character(v,eq),first=spellStats(ids[0]||'energyBolt',v,eq);let direct=0,load=0;
  for(const id of ids){const st=spellStats(id,v,eq);if(id!=='magicArrow'){direct+=st.dps;load+=st.cast/st.interval;}}
@@ -115,18 +117,19 @@ function confirmSkillReset(){const refund=S.spent(state.skillLevels)-1;if(state.
 function learn(id){const n=S.byId[id];if(!n||state.dead||!S.available(state.skillLevels,id,state.powerLevel)||state.skillLevels[id]>=n.max||availableSP()<n.cost)return false;state.skillLevels[id]++;save();refresh();return true;}
 function slotSkill(slot,id){if(state.dead||!Number.isInteger(slot)||slot<0||slot>2||id!==null&&(!S.byId[id]||S.byId[id].type!=='active'||!state.skillLevels[id]))return false;
  if(state.activeSlots[slot]===id)return false;if(id&&state.activeSlots.includes(id)){toast('같은 스킬은 한 슬롯에만 장착할 수 있어요.');return false;}if(!id&&state.activeSlots.filter(Boolean).length===1)return false;
+ const removed=state.activeSlots[slot];if(removed in summonEpoch){summonEpoch[removed]++;effects=effects.filter(f=>f.spell!==removed);}
  state.activeSlots[slot]=id;if(!state.activeSlots.includes('magicArrow')){runeActive=false;runeClock=0;}if(id)state.cooldowns[id]=spellStats(id).cooldown;castingId=null;phase='ready';phaseLeft=0;save();refresh();return true;}
 function awardBoss(stage){if(state.bossCleared.includes(stage))return false;state.bossCleared.push(stage);if(stage%100===0&&!state.fullSetClaimed.includes(stage)){state.fullSetClaimed.push(stage);state.fullSetPending.push(stage);}toast('최초 처치 · SP +'+S.reward(stage)+(stage%100===0?' · 유니크 풀세트 보관':''));return true;}
 function claimFullSet(stage){if(state.dead||!state.fullSetPending.includes(stage))return false;if(state.inventory.length+7>C.inventoryLimit){toast('보관함 7칸을 비워 주세요. 풀세트 보상은 보관됩니다.');return false;}for(let slot=0;slot<7;slot++)state.inventory.push(I.rollSet(I.create(stage,slot,2,true,'set-'+stage+'-'+slot)));if(!state.uniqueClaimed.includes(stage))state.uniqueClaimed.push(stage);state.fullSetPending=state.fullSetPending.filter(n=>n!==stage);save();refresh();return true;}
 function stageGoal(s=state.stage){return C.killsPerStage*s;}
 function packSize(s=state.stage){return s;}
 function packInterval(s=state.stage){return Math.max(C.minPackInterval,(C.basePackInterval-C.packIntervalStep*(s-1))/(1+stats().move/100));}
-const enemyHPTable=[0,C.baseEnemyHP],bossBaseHPTable=[0,C.baseEnemyHP];
+const bossBaseHPTable=[0,C.bossBaseHP];
 function baseBossHPAt(s){for(let n=bossBaseHPTable.length;n<=s;n++)bossBaseHPTable[n]=Math.min(1e270,bossBaseHPTable[n-1]*(C.hpGrowth+C.bossHPGrowthStep*(n-2)));return bossBaseHPTable[s]*(C.bossHP+C.bossHPStep*(s-1));}
-function baseHPAt(s){for(let n=enemyHPTable.length;n<=s;n++)enemyHPTable[n]=Math.min(1e270,enemyHPTable[n-1]*(C.hpGrowth+C.enemyHPGrowthStep*(n-2)));return enemyHPTable[s];}function attackAt(s){return C.baseEnemyAttack*C.hpGrowth**(s-1);}function goldAt(s){return Math.round(C.baseGold*C.goldGrowth**(s-1));}
+function baseHPAt(s){return C.baseEnemyHP*Math.pow(C.normalHPGrowth,Math.max(1,s)-1);}function attackAt(s){return C.baseEnemyAttack*C.hpGrowth**(s-1);}function goldAt(s){return Math.round(C.baseGold*C.goldGrowth**(s-1));}
 // Geometric interpolation keeps stage transitions smooth while avoiding an ever-growing extra exponent.
 function hpCorrection(s,anchors){for(let i=1;i<anchors.length;i++){const [a,x]=anchors[i-1],[b,y]=anchors[i];if(s<=b)return x*(y/x)**((s-a)/(b-a));}return anchors[anchors.length-1][1];}
-function hpAt(s){return baseHPAt(s)*hpCorrection(s,C.normalHPAnchors);}
+function hpAt(s){return baseHPAt(s);}
 function bossHPAt(s){return baseBossHPAt(s)*hpCorrection(s,C.bossHPAnchors);}
 function enemyHPLabel(){const boss=enemies.find(e=>e.boss&&e.hp>0&&!e.rewarded);return boss?'BOSS HP '+number(Math.max(0,boss.hp))+' / '+number(boss.maxHP):state.bossActive?'BOSS HP '+number(bossHPAt(state.stage)):'적 HP '+number(hpAt(state.stage));}
 function slotGaugeState(i,cdr=character(state).cdr){const id=state.activeSlots[i];if(!id)return{phase:'empty',fill:0,cast:0,label:'＋'};if(id==='magicArrow'&&runeActive){const interval=spellStats(id).runeInterval;return{phase:'ready',fill:Math.max(0,Math.min(1,1-runeClock/interval)),cast:0,label:'ACTIVE · '+Math.max(0,runeClock).toFixed(1)+'s'};}if(castingId===id)return{phase:'casting',fill:1,cast:Math.max(0,Math.min(1,1-phaseLeft/phaseTotal)),label:'CASTING'};const left=state.cooldowns[id]||0,total=S.byId[id].cd*(1-cdr);return{phase:left>0?'cooldown':'ready',fill:Math.max(0,Math.min(1,1-left/total)),cast:0,label:left>0?left.toFixed(1)+'s':'READY'};}
@@ -215,8 +218,16 @@ function jumpCount(){return passive('jump')+(passive('jump')&&setCount('lightnin
 function pierceLoss(){return .18;}
 function passive(id){return state.skillLevels[id]||0;}
 function resistDamage(e,amount,family){const r=S.resistance(e.stage);return amount*(family===r.family?1-r.value:1);}
-function addBurn(e,dps,duration,spread=false){if(!spread&&passive('blaze')){if(setCount('fire')>=3)duration+=1;if(setCount('fire')>=5)dps*=1.25;}e.burns ||= [];const cap=1+passive('blaze');if(e.burns.length>=cap)e.burns.sort((a,b)=>a.dps-b.dps).shift();e.burns.push({dps,left:duration,spread});e.burnLeft=Math.max(...e.burns.map(b=>b.left));}
-function spreadBurn(e){if(!passive('spread')||!e.burns?.length||e.burns.every(b=>b.spread))return;const strongest=e.burns.reduce((a,b)=>a.dps>b.dps?a:b);for(const other of enemies)if(other!==e&&other.hp>0&&other.stage===e.stage&&Math.hypot(other.x-e.x,other.y-e.y)<=55+15*passive('spread'))addBurn(other,strongest.dps,strongest.left,true);}
+// One shared burn per enemy: the strongest active base DPS, one refreshed timer, three intensity stages.
+function addBurn(e,dps,duration,spread=false,increment=true,stage=1){
+ if(e.hp<=0||e.rewarded)return;
+ if(!spread&&passive('blaze')){if(setCount('fire')>=3)duration+=1;if(setCount('fire')>=5)dps*=1.25;}
+ const old=e.burns?.[0],live=old&&old.left>0;
+ const stacks=live?Math.min(3,Math.max(old.stacks||1,spread?stage:1)+(increment&&!spread?1:0)):Math.min(3,spread?stage:1);
+ e.burns=[{dps:live?Math.max(old.dps,dps):dps,left:duration,stacks,spread:live?old.spread&&spread:spread}];
+ e.burnLeft=duration;e.burnDPS=e.burns[0].dps*[0,1,1.2,2][stacks];
+}
+function spreadBurn(e){if(!passive('spread')||!e.burns?.length||e.burns.every(b=>b.spread))return;const b=e.burns[0];for(const other of enemies)if(other!==e&&other.hp>0&&other.stage===e.stage&&Math.hypot(other.x-e.x,other.y-e.y)<=55+15*passive('spread'))addBurn(other,b.dps,b.left,true,false,b.stacks);}
 function hitSpell(e,raw,n,st,critical){if(e.hp<=0||e.rewarded)return;
  const amount=raw*(e.boss?1+st.bossBonus:1),shatter=n.family==='ice'&&n.id!=='blizzard'&&e.ccLabel==='빙결'&&e.ccUntil>time&&passive('shatter')>0;
  applyDamage(e,resistDamage(e,amount,n.family),critical?'#ffe4a8':n.color,critical?'✦ ':'');if(e.hp<=0)return;
@@ -264,7 +275,8 @@ function cast(id=state.activeSlots.find(Boolean)){
  if(n.id==='lightning'){hit=[target];let current=target;while(hit.length<st.level+3){const next=alive.filter(e=>!hit.includes(e)&&Math.hypot(e.x-current.x,e.y-current.y)<=st.radius).sort((a,b)=>Math.hypot(a.x-current.x,a.y-current.y)-Math.hypot(b.x-current.x,b.y-current.y))[0];if(!next)break;hit.push(next);current=next;}}
  const fx={spell:n.id,tier:n.fx,x:center.x,y:center.y-15,targets:hit.map(e=>({x:e.x,y:e.y-12})),age:0,duration:n.id==='meteor'?3.32:st.duration?st.duration+.2:n.id==='arcaneBurst'?1.1:n.rank>=3?1:.7,r:st.radius,color:n.color,seed:Math.random()*10,overcharged:boost>1,pierced:0,origin:{x:hero.x,y:hero.y-15}};effects.push(fx);if(effects.length>24)effects.shift();
  if(['chainLightning','thunderstorm'].includes(id)){castElectricArea(n,st,center,target.stage,critical,fx);return true;}
- if(['meteor','flameExplosion','blizzard'].includes(id)){
+ if(['flameExplosion','iceSpear'].includes(id)){castElementSummon(n,st,center,target.stage,critical,fx);return true;}
+ if(['meteor','blizzard'].includes(id)){
  castArea(n,st,center,target.stage,critical,fx);return true;
  }
  if(n.id==='iceSpear')for(const e of hit){e.novaUntil=time+(2+.1*(st.level-1))*coldDuration();e.novaSlow=.3+.02*(st.level-1);}
@@ -355,6 +367,85 @@ function drawElectricEffect(f){
  if(t-(f.flashAt??-10)>=0&&t-(f.flashAt??-10)<.22)for(const b of f.bolts||[]){bolt({x:orb?x:b.x-12,y:orb?y:b.y+8},b,orb?3:2);ellipse(b.x,b.y,12,4,'#fff0be');}
  ctx.restore();return true;
 }
+function castElementSummon(n,st,center,stage,critical,fx){
+ const fire=n.id==='flameExplosion',mult=critical?st.critMult:1,epoch=summonEpoch[n.id];
+ fx.summonKind=fire?'ifrit':'guardian';fx.duration=st.duration+.3;fx.summonX=Math.max(hero.x+55,center.x-(fire?105:160));fx.summonY=center.y+(fire?-30:15);fx.volleys=[];fx.flashAt=-10;
+ const alive=()=>enemies.filter(e=>e.hp>0&&e.stage===stage&&e.x<=980).sort((a,b)=>a.x-b.x);
+ const valid=()=>epoch===summonEpoch[n.id]&&!state.dead&&state.stage===stage&&state.activeSlots.includes(n.id)&&state.skillLevels[n.id]>0;
+ if(!fire){
+  for(let j=0;j<3;j++)schedule(.8*(j+1),()=>{
+   if(!valid())return;const target=alive()[0];if(!target)return;
+   const radius=st.radius*[.8,1,1.2][j],amount=st.damage*[1,1,1.5][j]/3.5*mult;
+   fx.flashAt=.8*(j+1);fx.volleys.push({at:fx.flashAt,x:target.x,y:target.y-15,r:radius,phase:j+1});
+   for(const e of alive().filter(e=>Math.hypot(e.x-target.x,e.y-target.y)<=radius)){
+    e.novaUntil=time+(2+.1*(st.level-1))*coldDuration();e.novaSlow=.3+.02*(st.level-1);
+    hitSpell(e,amount,n,st,critical);
+   }
+   sound(360+j*70,.1,'triangle',.015);
+  });return;
+ }
+ // All tornadoes owned by one Ifrit share a direct-damage tick; burn sources remain independent.
+ const tornadoes=[];
+ for(let j=0;j<3;j++)schedule(.8*j,()=>{
+  if(!valid())return;const target=alive()[0];if(!target)return;
+  fx.flashAt=.8*j;
+  for(let k=0;k<=j;k++){
+   const x=Math.max(230,Math.min(970,target.x+(k-j/2)*st.radius*.8)),y=target.y;
+   const tor={at:.8*j,end:.8*j+st.tornadoDuration,x,y,r:st.radius,seen:new Set()};
+   tornadoes.push(tor);fx.volleys.push(tor);
+  }
+  sound(110,.12,'triangle',.018);
+ });
+ // Split the timeline at every birth/expiry as well as 0.5s ticks so fractional duration is exact.
+ const boundaries=new Set([0,st.duration]);for(let t=.5;t<st.duration;t+=.5)boundaries.add(t);
+ for(let j=0;j<3;j++){boundaries.add(.8*j);boundaries.add(.8*j+st.tornadoDuration);}
+ const times=[...boundaries].sort((a,b)=>a-b);
+ for(let i=1;i<times.length;i++){const start=times[i-1],end=times[i],mid=(start+end)/2;schedule(end,()=>{
+  if(!valid())return;const active=tornadoes.filter(t=>t.at<=mid&&t.end>mid);
+  for(const e of alive()){
+   const overlapping=active.filter(t=>Math.hypot(e.x-t.x,e.y-t.y)<=t.r);if(!overlapping.length)continue;
+   hitSpell(e,st.dotDps*(end-start)*mult,n,{...st,noBurn:true},critical);
+   if(e.hp<=0)continue;
+   for(const tor of overlapping){addBurn(e,st.dotDps*mult*(e.boss?1+st.bossBonus:1)*.12,3+.4*passive('blaze'),false,!tor.seen.has(e.id));tor.seen.add(e.id);}
+  }
+ });}
+}
+function drawElementSummon(f){
+ const fire=f.summonKind==='ifrit',x=f.summonX,y=f.summonY,t=f.age,pulse=Math.max(0,1-(t-f.flashAt)/.3);
+ ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,t/.12,(f.duration-t)/.25));
+ const poly=(pts,c)=>{ctx.fillStyle=c;ctx.beginPath();pts.forEach(([a,b],i)=>i?ctx.lineTo(a,b):ctx.moveTo(a,b));ctx.closePath();ctx.fill();};
+ ellipse(x,y+24,34,8,fire?'#ed934533':'#a7e6f433');
+ if(fire){
+  // A deliberately simple flame spirit: two horns, two eyes, a whirlwind instead of legs.
+  poly([[x-23,y-34],[x-29,y-65],[x-12,y-52],[x,y-73],[x+12,y-51],[x+27,y-66],[x+22,y-33],[x+32,y-6],[x-30,y-6]],'#d96b42');
+  poly([[x-15,y-37],[x-10,y-53],[x+3,y-46],[x+16,y-39],[x+17,y-8],[x-16,y-8]],'#ffb96d');
+  line([[x-14,y-38],[x-6,y-36]],'#fff1bf',3);line([[x+5,y-36],[x+13,y-38]],'#fff1bf',3);
+  line([[x-21,y-24],[x-40,y-15-pulse*14],[x-49,y-26-pulse*16]],'#e9864e',9);
+  line([[x+21,y-24],[x+40,y-15-pulse*14],[x+49,y-26-pulse*16]],'#e9864e',9);
+  for(let i=0;i<4;i++){ctx.strokeStyle=i%2?'#ffc579':'#d67a4d';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(x+Math.sin(t*7+i)*4,y+2+i*7,23-i*5,6,0,0,TAU);ctx.stroke();}
+  for(const v of f.volleys){if(t<v.at||t>=v.end)continue;const age=t-v.at,fade=Math.min(1,(v.end-t)/.2);ctx.save();ctx.globalAlpha*=fade;
+   for(let i=0;i<5;i++){ctx.strokeStyle=i%2?'#ffd48a':'#e8864f';ctx.lineWidth=state.lowFX?3:5;ctx.beginPath();ctx.ellipse(v.x+Math.sin(age*8+i)*7,v.y-15-i*12,v.r*(.2+i*.13),7+i*2,0,age*5+i,age*5+i+TAU*.83);ctx.stroke();}
+   ctx.restore();
+  }
+ }else{
+  const bob=Math.sin(t*4)*2;
+  ellipse(x,y+3+bob,26,24,'#aed5e1');ellipse(x,y-19+bob,20,19,'#d3edf0');ellipse(x,y-44+bob,16,15,'#eaf6f4');
+  ellipse(x-5,y-47+bob,2,2,'#394b68');ellipse(x+5,y-47+bob,2,2,'#394b68');
+  poly([[x,y-43+bob],[x+13,y-40+bob],[x,y-38+bob]],'#e3ab70');
+  line([[x-19,y-20],[x-37,y-29-pulse*18],[x-44,y-41-pulse*15]],'#8bc8e3',4);line([[x+19,y-20],[x+37,y-29-pulse*18],[x+44,y-41-pulse*15]],'#8bc8e3',4);
+  poly([[x,y-79],[x+8,y-68],[x,y-58],[x-8,y-68]],'#85cee8');
+  line([[x-18,y-31],[x+17,y-31],[x+20,y-12]],'#7698bf',5);
+  ellipse(x,y-17,2,2,'#607993');ellipse(x,y-6,2,2,'#607993');
+  for(const v of f.volleys){const age=t-v.at;if(age<0||age>.65)continue;ctx.save();ctx.globalAlpha*=1-age/.65;const r=v.r*Math.min(1,.35+age/.2);
+   ellipse(v.x,v.y,r,r*.42,'#94d8eb22');
+   for(let k=0;k<6;k++){const a=k*TAU/6,c=Math.cos(a),sn=Math.sin(a)*.5;line([[v.x,v.y],[v.x+c*r,v.y+sn*r]],'#c3f0fa',3+v.phase);
+    for(const q of [.5,.75]){const xx=v.x+c*r*q,yy=v.y+sn*r*q;for(const side of [-1,1]){const b=a+side*.65;line([[xx,yy],[xx-Math.cos(b)*r*.18,yy-Math.sin(b)*r*.09]],'#91cfe8',2+v.phase);}}
+   }ctx.restore();
+  }
+ }
+ ctx.restore();return true;
+}
+
 function castArea(n,st,center,stage,critical,fx){
  const delay=n.id==='meteor'?.32:0,mult=critical?st.critMult:1,burned=new Set(),iceHits=new Map(),frozen=new Set();
  const groundRadius=n.id==='meteor'?st.radius*130/165:st.radius;
@@ -365,7 +456,7 @@ function castArea(n,st,center,stage,critical,fx){
  for(const e of targets(groundRadius)){
  hitSpell(e,st.dotDps*slice*mult,n,{...st,noBurn:true},critical);
  if(e.hp<=0)continue;
- if(n.family==='fire'&&!burned.has(e.id)){addBurn(e,st.dotDps*mult*(e.boss?1+st.bossBonus:1)*.12,3+.4*passive('blaze'));burned.add(e.id);}
+ if(n.family==='fire'){addBurn(e,st.dotDps*mult*(e.boss?1+st.bossBonus:1)*.12,3+.4*passive('blaze'),false,!burned.has(e.id));burned.add(e.id);}
  if(n.id==='blizzard'){e.slow=2*coldDuration();const hits=(iceHits.get(e.id)||0)+1;iceHits.set(e.id,hits);if(hits>=3&&!frozen.has(e.id)){frozen.add(e.id);freezeOrStun(e,(.6+.05*(st.level-1))*(e.boss?.25:1),'빙결');}}
  }
  });}
@@ -382,7 +473,7 @@ function die(){if(state.dead)return;runeActive=false;runeClock=0;state.energyCas
 function revive(){runeActive=false;runeClock=0;lastOvercharge=-100;state.stage=Math.max(1,state.stage-1);state.kills=0;state.bossActive=false;state.dead=false;state.hp=stats().hp;state.shield=hasUnique('cloak')?stats().hp*.1:0;enemies=[];effects=[];particles=[];texts=[];scheduled=[];castingId=null;roundRobin=0;spawnClock=.15;pendingSpawn=0;setPhase('cast');hideModal();manualPause=false;save();refresh();banner('STAGE '+state.stage+' · 다시 시작');}
 function update(dt){time+=dt;const due=scheduled.filter(x=>x.at<=time);scheduled=scheduled.filter(x=>x.at>time);for(const event of due)event.run();const st=stats();state.hp=Math.min(st.hp,state.hp+(st.hp*C.regenPerSecond+st.regen)*dt);if(!state.bossActive){spawnClock-=dt;if(spawnClock<=0&&pendingSpawn===0){pendingSpawn=packSize();spawnClock=packInterval();}while(pendingSpawn>0&&enemies.length<C.maxEnemies){spawn();pendingSpawn--;}}
  for(const e of [...enemies]){if(e.hp<=0)continue;e.flash=Math.max(0,e.flash-dt);e.slow=Math.max(0,e.slow-dt);
- if(e.burns?.length){for(const b of e.burns){const slice=Math.min(dt,b.left);b.left-=slice;e.hp-=resistDamage(e,b.dps*slice,'fire');}if(e.hp<=0){kill(e);continue;}e.burns=e.burns.filter(b=>b.left>0);e.burnLeft=e.burns.length?Math.max(...e.burns.map(b=>b.left)):0;}
+ if(e.burns?.length){for(const b of e.burns){const slice=Math.min(dt,b.left);b.left-=slice;e.hp-=resistDamage(e,b.dps*[0,1,1.2,2][b.stacks||1]*slice,'fire');}if(e.hp<=0){kill(e);continue;}e.burns=e.burns.filter(b=>b.left>0);e.burnLeft=e.burns.length?Math.max(...e.burns.map(b=>b.left)):0;if(!e.burns.length)e.burnDPS=0;}
  if(time<e.ccUntil)continue;
  if(e.x>e.stopX)e.x=Math.max(e.stopX,e.x-e.speed*(1-Math.max(e.slow>0?Math.min(.65,.15+.08*passive('cold')*Math.max(1,e.iceStacks)):0,time<(e.novaUntil||0)?e.novaSlow:0))*dt);
  else{e.attackCD-=dt;if(e.attackCD<=0){e.attackCD+=C.enemyAttackInterval;const taken=damagePlayer(e.attack);float(hero.x,hero.y-85,'−'+number(taken),'#ff9f9b',false);effects.push({tier:-1,x:hero.x,y:hero.y-35,age:0,duration:.2,color:'#ff9797',targets:[]});if(state.hp<=0){die();break;}}}}
@@ -443,13 +534,15 @@ function skillLevelDetail(n,lv){
  if(n.id==='magicArrow'){const st=spellStats(n.id);return '<p class="hint left">공격 주기 '+st.runeInterval.toFixed(2)+'초'+(lv<n.max?' → 다음 '+Math.max(.5,st.runeInterval-.05).toFixed(2)+'초':'')+' · 세트 Lv.15: 0.50초<br>룬 1개 · 공격주기에 쿨감 미적용 · 최초 소환/재장착 대기만 쿨감 적용</p>';}
  if(n.id==='overcharge')return '<p class="hint left">필요 '+chargeNeed()+'칸 · 파동 피해 룬의 '+(1+.4*lv).toFixed(1)+'배 · 반경 1.3배<br>볼트/룬 적중당 1칸 · 파동은 충전 제외 · 버스트 강제 발동은 기존 게이지 유지</p>';
 
+ if(n.id==='flameExplosion'){const st=spellStats(n.id);return '<p class="hint left">회오리 개당 '+st.tornadoDuration.toFixed(2)+'초 · 공격 간격 0.8초 · 전체 '+st.duration.toFixed(2)+'초<br>한 소환체의 회오리 직접 피해는 중복되지 않음 · 각 회오리 최초 적중에 화상 +1, 이후 시간 갱신</p>';}
+ if(n.id==='iceSpear')return '<p class="hint left">0.8초마다 3회 · 매회 재조준 · 기존 노바 총 피해 유지<br>1·2차 각 28.57%, 3차 42.86% · 냉기 중첩과 빙결 파쇄 적용</p>';
  if(n.id==='chainLightning'){const st=spellStats(n.id);return '<p class="hint left">'+(lv?'현재 '+st.hitCount+'회'+(lv<n.max?' → 다음 레벨 '+(st.hitCount+1)+'회':' · MAX'):'해금 시 4회')+' · 3초간 관통 찌르기<br>세트 레벨 포함 · 레벨당 횟수 +1 · 각 소환체 독립 공격 · 길막 없음</p>';}
 
  if(n.id==='lightning')return '<p class="hint left">'+(lv?'현재 연쇄 대상 '+(spellStats(n.id).level+3)+'명'+(lv<n.max?' → 다음 레벨 '+(spellStats(n.id).level+4)+'명':' · MAX'):'해금 시 연쇄 대상 4명')+'<br>전류 도약: 별도 추가 대상 최대 '+jumpCount()+'명 · 피해 45%</p>';
  if(n.id==='jump')return '<p class="hint left">현재 추가 대상 최대 '+lv+'명'+(lv<n.max?' → 다음 레벨 '+(lv+1)+'명':' · MAX')+' · 기본 연쇄 대상과 별도</p>';
  return '';
 }
-function renderGrimoire(){const html=S.trees.map(t=>'<section class="skill-tree" style="--spell:'+t.color+'"><header><h3>'+t.name+'</h3><span>'+t.nodes.reduce((sum,n)=>sum+state.skillLevels[n.id]*n.cost,0)+' / '+(t.id==='cosmic'?100:70)+' SP</span></header>'+(t.id==='cosmic'&&!S.mastered(state.skillLevels)?'<p class="hint left">기본 4계열 280 SP ALL MASTER 필요</p>':'')+t.nodes.map(n=>{const lv=state.skillLevels[n.id],ready=S.available(state.skillLevels,n.id,state.powerLevel),st=n.type==='active'?spellStats(n.id):null;return '<div class="skill-node '+(!ready?'locked':'')+'"><div><small>'+n.type.toUpperCase()+' · '+n.cost+' SP / Lv</small><h4>'+n.name+' <span>'+lv+'/'+n.max+(st?.bonusLevel?' (+'+st.bonusLevel+')':'')+'</span></h4><p>'+n.description+'</p>'+unlockDetail(n)+synergyDetail(n)+skillLevelDetail(n,lv)+(st?'<p>적용 Lv.'+st.level+' · 계열 시너지 +'+Math.round(st.synergy*100)+'% · 세트 피해 +'+Math.round(st.setDamage*100)+'%</p>':'')+(st?'<small>'+(st.runeInterval?'주기 피해 '+number(st.damage)+' / '+st.runeInterval.toFixed(2)+'초':st.hitCount?'찌르기 '+number(st.hitDamage)+' × '+st.hitCount+'회 / 3초':'직접 '+number(st.damage))+(st.duration&&!st.hitCount?' · 초당 '+number(st.dotDps)+' × '+st.duration.toFixed(1)+'s':'')+' · 총 '+number(st.totalDamage)+' · CD '+st.cooldown.toFixed(2)+'s · 시전 '+st.cast.toFixed(2)+'s</small>':'')+'</div><button data-learn="'+n.id+'" '+(!ready||lv>=n.max||availableSP()<n.cost||state.dead?'disabled':'')+'>'+(lv===n.max?'MAX':!ready?'조건 미충족':lv?'강화':'배우기')+'</button></div>';}).join('')+'</section>').join('');if($('spellList').innerHTML!==html)$('spellList').innerHTML=html;}
+function renderGrimoire(){const html=S.trees.map(t=>'<section class="skill-tree" style="--spell:'+t.color+'"><header><h3>'+t.name+'</h3><span>'+t.nodes.reduce((sum,n)=>sum+state.skillLevels[n.id]*n.cost,0)+' / '+(t.id==='cosmic'?100:70)+' SP</span></header>'+(t.id==='cosmic'&&!S.mastered(state.skillLevels)?'<p class="hint left">기본 4계열 280 SP ALL MASTER 필요</p>':'')+t.nodes.map(n=>{const lv=state.skillLevels[n.id],ready=S.available(state.skillLevels,n.id,state.powerLevel),st=n.type==='active'?spellStats(n.id):null;return '<div class="skill-node '+(!ready?'locked':'')+'"><div><small>'+n.type.toUpperCase()+' · '+n.cost+' SP / Lv</small><h4>'+n.name+' <span>'+lv+'/'+n.max+(st?.bonusLevel?' (+'+st.bonusLevel+')':'')+'</span></h4><p>'+n.description+'</p>'+unlockDetail(n)+synergyDetail(n)+skillLevelDetail(n,lv)+(st?'<p>적용 Lv.'+st.level+' · 계열 시너지 +'+Math.round(st.synergy*100)+'% · 세트 피해 +'+Math.round(st.setDamage*100)+'%</p>':'')+(st?'<small>'+(n.id==='iceSpear'?'눈송이 3회 합계 '+number(st.damage):st.runeInterval?'주기 피해 '+number(st.damage)+' / '+st.runeInterval.toFixed(2)+'초':st.hitCount?'찌르기 '+number(st.hitDamage)+' × '+st.hitCount+'회 / 3초':'직접 '+number(st.damage))+(st.duration&&!st.hitCount&&n.id!=='iceSpear'?' · 초당 '+number(st.dotDps)+' × '+st.duration.toFixed(1)+'s':'')+' · 총 '+number(st.totalDamage)+' · CD '+st.cooldown.toFixed(2)+'s · 시전 '+st.cast.toFixed(2)+'s</small>':'')+'</div><button data-learn="'+n.id+'" '+(!ready||lv>=n.max||availableSP()<n.cost||state.dead?'disabled':'')+'>'+(lv===n.max?'MAX':!ready?'조건 미충족':lv?'강화':'배우기')+'</button></div>';}).join('')+'</section>').join('');if($('spellList').innerHTML!==html)$('spellList').innerHTML=html;}
 function showTab(t){if(!['magic','equipment','grimoire','character'].includes(t))return;menuPositions[tab]=$('menuScroll').scrollTop||0;tab=t;lastTS=0;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===t);b.setAttribute('aria-current',b.dataset.tab===t?'page':'false');});for(const k of ['magic','equipment','grimoire','character'])$(k+'Panel').hidden=k!==t;$('menuScreen').hidden=t==='magic';document.querySelector('main').hidden=t!=='magic';$('menuTitle').textContent=({equipment:'인벤토리',grimoire:'스킬',character:'캐릭터'})[t]||'전투';if(t==='equipment')newItems=0;refresh();$('menuScroll').scrollTop=menuPositions[t]||0;}
 function checkOrientation(){const coarse=matchMedia('(pointer: coarse)').matches,type=window.screen?.orientation?.type,angle=typeof window.orientation==='number'?window.orientation:null;orientationBlocked=coarse&&(type?type.startsWith('landscape'):angle!==null&&Math.abs(angle)%180===90);$('rotateNotice').hidden=!orientationBlocked;lastTS=0;}
 function modal(html,close=true){$('modalContent').innerHTML=html;$('modal').hidden=false;$('modalClose').hidden=!close;refresh();}
@@ -547,6 +640,7 @@ function drawSpellSheet(f){
 }
 // Spell art now uses lightweight geometric Canvas effects.
 function drawReworkedEffect(f){
+ if(f.summonKind)return drawElementSummon(f);
  if(!['magicArrow','arcaneBurst','flameExplosion','meteor','iceSpear','blizzard'].includes(f.spell))return false;
  const t=f.age,p=t/f.duration,x=f.x,y=f.y,r=f.r;ctx.save();ctx.shadowBlur=0;ctx.globalAlpha=Math.min(1,(f.duration-t)*5);
  const poly=(pts,c)=>{ctx.fillStyle=c;ctx.beginPath();pts.forEach((v,i)=>i?ctx.lineTo(...v):ctx.moveTo(...v));ctx.closePath();ctx.fill();};
@@ -606,10 +700,10 @@ function drawEffect(f){if(drawRuneWave(f)||drawElectricEffect(f)||drawReworkedEf
  if(f.tier===10){const q=Math.min(1,p*1.5),bx=from.x+(x-from.x)*q,by=from.y+(y-from.y)*q;line([[from.x,from.y],[bx,by]],col+'99',10);ellipse(bx,by,16,13,col);glow(bx,by,35,col+'88');if(q===1){rune(x,y,f.r*(.4+.6*p),col,p);glow(x,y,f.r,col+'55');}}if(f.tier===11){const q=Math.min(1,p*3),bx=from.x+(x-from.x)*q,by=from.y+(y-from.y)*q;line([[bx-45,by-15],[bx,by]],'#ff8b4677',15);glow(bx,by,35,'#ff9b4477');ellipse(bx,by,11,11,'#ffab60');ellipse(bx-2,by-2,6,6,'#ffeac0');if(q===1)rune(x,y,f.r*p,col,p);}
  if(f.tier===12){glow(x,y,f.r,'#ff8b4455');for(let i=0;i<9;i++){const angle=i*TAU/9,rr=f.r*p;ellipse(x+Math.cos(angle)*rr,y+Math.sin(angle)*rr*.5,8*(1-p)+2,13*(1-p)+2,col);}rune(x,y,f.r*(.2+.8*p),col,-p);}
  ctx.restore();}
-function drawEnemyStatus(e){ctx.save();const x=e.x,y=e.y-e.size*2.5-18;let label='',color='#ddd';if(time<e.ccUntil){label=e.ccLabel; color=e.ccLabel==='빙결'?'#9eedff':'#e7c0ff';ellipse(e.x,e.y-e.size,e.size*1.25,e.size*1.6,color+'33');}else if(e.burnLeft>0){label='화상';color='#ffb484';}else if(e.shockUntil>time){label='감전';color='#e0b7ff';}else if(e.starStacks>0){label='✧'.repeat(e.starStacks);color='#c9edff';}else if(e.iceStacks>0){label='❄'.repeat(e.iceStacks);color='#a6e5f3';}if(label){ctx.fillStyle=color;ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText(label,x,y);}ctx.restore();}
+function drawEnemyStatus(e){ctx.save();const x=e.x,y=e.y-e.size*2.5-18;let label='',color='#ddd';if(time<e.ccUntil){label=e.ccLabel; color=e.ccLabel==='빙결'?'#9eedff':'#e7c0ff';ellipse(e.x,e.y-e.size,e.size*1.25,e.size*1.6,color+'33');}else if(e.burnLeft>0){label='화상 '+(e.burns?.[0]?.stacks||1);color='#ffb484';}else if(e.shockUntil>time){label='감전';color='#e0b7ff';}else if(e.starStacks>0){label='✧'.repeat(e.starStacks);color='#c9edff';}else if(e.iceStacks>0){label='❄'.repeat(e.iceStacks);color='#a6e5f3';}if(label){ctx.fillStyle=color;ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText(label,x,y);}ctx.restore();}
 function render(){if(tab!=='magic')return;const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;const dpr=Math.min(devicePixelRatio||1,2);if(canvas.width!==Math.round(rect.width*dpr)||canvas.height!==Math.round(rect.height*dpr)){canvas.width=Math.round(rect.width*dpr);canvas.height=Math.round(rect.height*dpr);}ctx.setTransform(canvas.width/1000,0,0,canvas.height/400,0,0);ctx.clearRect(0,0,1000,400);ctx.save();if(shake)ctx.translate(Math.sin(time*60)*shake,Math.cos(time*50)*shake*.3);drawBackground();const worldScale=Math.min(canvas.width/1000,canvas.height/400);ctx.setTransform(worldScale,0,0,worldScale,(canvas.width-1000*worldScale)/2,Math.max(0,(canvas.height-400*worldScale)*.6));drawRune();drawHero();for(const e of [...enemies].sort((a,b)=>a.y-b.y)){drawEnemy(e);drawEnemyStatus(e);}for(const f of effects)drawEffect(f);for(const p of particles){ctx.globalAlpha=1-p.age/p.duration;ellipse(p.x,p.y,p.size,p.size,p.color);}ctx.globalAlpha=1;for(const t of texts){ctx.globalAlpha=1-t.age/t.duration;ctx.font=(t.damage?'bold 15px':'12px')+' sans-serif';ctx.textAlign='center';ctx.fillStyle=t.color;ctx.shadowBlur=3;ctx.shadowColor='#000';ctx.fillText(t.label,t.x,t.y);}ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();if(manualPause){ctx.fillStyle='#0b0d1670';ctx.fillRect(0,0,1000,400);ctx.fillStyle='#ece2ff';ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('일시정지',500,210);}}
 function frame(ts){const dt=lastTS?Math.min((ts-lastTS)/1000,.05):0;const onlineDt=lastTS?Math.max(0,(ts-lastTS)/1000):0;lastTS=ts;gachaTick(onlineDt);if(!isPaused())update(dt);render();refreshSlotGauges();if(ts-lastUI>180){refresh();lastUI=ts;}if(ts-lastSave>5000){if(state.started)save();lastSave=ts;}requestAnimationFrame(frame);}
 resetWorld();if(state.dead)showDeath();else if(!state.started)welcome();refresh();if(loadError)setTimeout(()=>toast(loadError),800);requestAnimationFrame(frame);
 // Test-only integration harness, absent unless explicitly opened with ?test=1.
-if(testMode)window.__mage={get state(){return state;},get enemies(){return enemies;},stats,recommendationScore,recommendedSet,compareItem,itemMods,dominates,equipBest,stageGoal,packSize,packInterval,hpAt,bossHPAt,baseHPAt,baseBossHPAt,hpCorrection,enemyHPLabel,slotGaugeState,refreshSlotGauges,attackAt,goldAt,validate,quote,number,character,spellStats,combinedStats,availableSP,learn,slotSkill,awardBoss,claimFullSet,cast,spawn,kill,damagePlayer,applyDamage,dropItem,awardUnique,claimUnique,uniqueItem,openUnique,salePrice,sellItem,confirmSell,sellWeak,buy,equip,revive,die,save,refresh,render,showTab,settings,resetWorld,get effects(){return effects;},get castingId(){return castingId;},get time(){return time;},get runeActive(){return runeActive;},get runeClock(){return runeClock;},get waveCount(){return waveCount;},runeWave,energyCharge,chargeNeed,updateRune,slotMenu,help,renderCharacter,renderGrimoire,resetSkills,confirmSkillReset,selectSkin,skinConfig,ensureSkin,castOrigin,drawHero,get scheduledCount(){return scheduled.length;},frame,isPaused,checkOrientation,sortedInventory,claimDrop,setCount,jumpCount,pierceLoss,coldDuration,castArea,drawReworkedEffect,openAbsorb,forgePlan,forgeOnce,enhanceLevel,enhanceMult,absorb,absorbPreview,itemLines,itemMods,gachaTick,openGacha,claimGacha,spellFrame,drawSpellSheet,ensureSpellImage,get spellImages(){return spellImages;},get skinImages(){return skinImages;},step(seconds){let n=Math.ceil(seconds/.025);for(let i=0;i<n&&!state.dead;i++)update(.025);refresh();},setState(v){state=validate(v);resetWorld();$('modal').hidden=true;refresh();},fresh};
+if(testMode)window.__mage={get state(){return state;},get enemies(){return enemies;},stats,recommendationScore,recommendedSet,compareItem,itemMods,dominates,equipBest,stageGoal,packSize,packInterval,hpAt,bossHPAt,baseHPAt,baseBossHPAt,hpCorrection,enemyHPLabel,slotGaugeState,refreshSlotGauges,attackAt,goldAt,validate,quote,number,character,spellStats,combinedStats,availableSP,learn,slotSkill,awardBoss,claimFullSet,cast,spawn,kill,damagePlayer,applyDamage,dropItem,awardUnique,claimUnique,uniqueItem,openUnique,salePrice,sellItem,confirmSell,sellWeak,buy,equip,revive,die,save,refresh,render,showTab,settings,resetWorld,get effects(){return effects;},get castingId(){return castingId;},get time(){return time;},get runeActive(){return runeActive;},get runeClock(){return runeClock;},get waveCount(){return waveCount;},runeWave,energyCharge,chargeNeed,updateRune,slotMenu,help,renderCharacter,renderGrimoire,resetSkills,confirmSkillReset,selectSkin,skinConfig,ensureSkin,castOrigin,drawHero,get scheduledCount(){return scheduled.length;},frame,isPaused,checkOrientation,sortedInventory,claimDrop,setCount,jumpCount,pierceLoss,coldDuration,castArea,addBurn,spreadBurn,drawReworkedEffect,openAbsorb,forgePlan,forgeOnce,enhanceLevel,enhanceMult,absorb,absorbPreview,itemLines,itemMods,gachaTick,openGacha,claimGacha,spellFrame,drawSpellSheet,ensureSpellImage,get spellImages(){return spellImages;},get skinImages(){return skinImages;},step(seconds){let n=Math.ceil(seconds/.025);for(let i=0;i<n&&!state.dead;i++)update(.025);refresh();},setState(v){state=validate(v);resetWorld();$('modal').hidden=true;refresh();},fresh};
 })();
