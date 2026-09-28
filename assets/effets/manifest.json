@@ -1,0 +1,18 @@
+{
+  "assets": [
+    {
+      "id": "meteor",
+      "path": "assets/effects/meteor.png",
+      "sha256": "b0bf6238ac3bb185687040bc13d0b114c99b01a0181a4274b034a43247adb7df",
+      "columns": 4,
+      "rows": 4
+    },
+    {
+      "id": "blizzard",
+      "path": "assets/effects/blizzard.png",
+      "sha256": "cadac13224791c992430fb80eec19abcfd33490a8ef897edda5c056aaa7b334c",
+      "columns": 4,
+      "rows": 4
+    }
+  ]
+}
