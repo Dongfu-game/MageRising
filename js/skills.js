@@ -5,11 +5,11 @@ window.MAGE_SKILLS=(()=>{
  const nodes=[];
  function active(id,name,family,rank,cd,coef,radius,fx,description){nodes.push({id,name,en:name.toUpperCase(),family,rank,max:10,cost:rank,cd,coef,radius,fx,cast:.16+rank*.08,type:'active',color:colors[families.indexOf(family)],symbol:['✧','♨','❄','ϟ','✴'][families.indexOf(family)],description});}
  function passive(id,name,family,description,cost=1){nodes.push({id,name,family,max:5,cost,type:'passive',description,color:colors[families.indexOf(family)]});}
- active('energyBolt','Energy Bolt','energy',1,1,1,42,0,'직선 관통 · 뒤쪽 적일수록 피해 감소');
- passive('piercing','마력 관통','energy','관통당 피해 감소 18% → 레벨당 3%p 완화');
- active('magicArrow','Magic Arrow','energy',2,2.5,2.8,60,1,'3발 관통 화살 · 계수는 3발 합산');
- passive('overcharge','과충전','energy','에너지 4회 시전 후 다음 공격 강화 · 레벨당 피해 +25%, 크기 +6%');
- active('arcaneBurst','Arcane Burst','energy',3,5,5,90,10,'관통탄 + 후방 폭발 · 관통 1명당 폭발 +15%, 최대 5명');
+ active('energyBolt','Energy Bolt','energy',1,1,1.3,42,0,'빠른 관통탄 · 적중 시 공유 과충전 1칸 · 관통당 피해 18% 감소');
+ passive('piercing','마력 증폭','energy','레벨당 에너지 피해 +5% · 시너지/세트 피해와 합연산 · 과충전에도 1회 적용');
+ active('magicArrow','Arcane Rune','energy',2,2.5,1,760,1,'장착 후 최초 시전으로 룬 1개 유지 · 넓은 주기 공격 · 적중 시 과충전 1칸 · 해제/사망 시 소멸');
+ passive('overcharge','과충전','energy','공유 4칸 충전 시 룬 파동 · 피해 룬 1회의 1+0.4×Lv배, 반경 1.3배 · 버스트는 게이지를 보존하고 강제 발동 · 룬 없으면 다음 에너지 공격 +25%×Lv');
+ active('arcaneBurst','Arcane Burst','energy',3,5,12,190,10,'압축 마력 단발 광역 폭발 · 장판/상태이상 없음 · 활성 룬의 과충전 즉시 발동');
  active('fireball','Fireball','fire',1,1.2,1.25,60,11,'착탄 폭발과 3초 화상');
  passive('blaze','맹화','fire','레벨당 화상 지속 +0.4초, 최대 중첩 +1');
  active('flameExplosion','Flame Tornado','fire',2,3,2,105,12,'지속 화염 회오리 · 레벨당 지속 +0.1초');
@@ -38,12 +38,14 @@ window.MAGE_SKILLS=(()=>{
  function requirement(id){const n=byId[id];if(!n)return null;const list=trees.find(t=>t.id===n.family).nodes,pos=list.indexOf(n);return{previous:pos?list[pos-1]:null,power:n.family==='cosmic'?0:[0,10,30,50,100][pos],cosmic:n.family==='cosmic'};}
  function available(l,id,powerLevel=Infinity){const n=byId[id],r=requirement(id);if(!n)return false;return(!r.cosmic||mastered(l))&&(!r.previous||(l[r.previous.id]||0)>=(r.cosmic?r.previous.max:1))&&(r.cosmic||powerLevel>=r.power||(l[id]||0)>0);}
  function synergy(l,id){const n=byId[id];if(!n||n.family==='cosmic'||n.type!=='active')return 0;return nodes.filter(x=>x.type==='active'&&x.family===n.family&&x.id!==id).reduce((sum,x)=>sum+(l[x.id]||0)*(x.rank===2?.03:x.rank===3?.02:n.rank===2?.03:.02),0);}
- function powerGain(l){const q=Math.floor(l/10),r=l%10;return 5*q*(q+1)+r*(q+1);}
+ const powerTotals=[0],powerLimit=1e100;
+ function powerStep(l){const n=Math.floor((Math.max(1,l)-1)/10)+1;return Math.exp(Math.min(Math.log(powerLimit),Math.log(n)+(n-1)*Math.log(1.05)));}
+ function powerGain(l){const q=Math.floor(l/10),r=l%10;if(q>4700)return powerLimit;while(powerTotals.length<=q){const n=powerTotals.length;powerTotals.push(Math.min(powerLimit,powerTotals[n-1]+10*powerStep(n*10)));}return Math.min(powerLimit,powerTotals[q]+r*powerStep(q*10+1));}
  const power=l=>10+powerGain(l);
  const powerCost=l=>Math.min(1e280,Math.ceil(20*1.06**Math.min(l,11000)));
  function powerQuote(l,gold,bulk){let count=bulk==='max'?Infinity:Number(bulk),n=0,cost=0;while(n<count&&n<100000){const c=powerCost(l+n);if(cost+c>gold||!Number.isFinite(cost+c))break;cost+=c;n++;}return{n,cost};}
  const suffix=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc'];
  function format(v){if(!Number.isFinite(v))return '—';const a=Math.abs(v);if(a<1000)return v.toLocaleString('en-US',{maximumFractionDigits:a<10?2:a<100?1:0});let n=Math.floor(Math.log10(a)/3);if(n>=suffix.length)return v.toExponential(2);let x=v/1000**n;if(Math.abs(Number(x.toFixed(2)))>=1000){n++;x/=1000;}return n<suffix.length?x.toFixed(2)+suffix[n]:v.toExponential(2);}
  const resistance=s=>({family:families[Math.floor((s-1)/5)%4],value:Math.min(.4,.1+Math.floor((s-1)/20)*.05)});
- return{nodes,byId,trees,blank,spent,reward,earned,mastered,available,requirement,synergy,powerGain,power,powerCost,powerQuote,format,resistance};
+ return{nodes,byId,trees,blank,spent,reward,earned,mastered,available,requirement,synergy,powerStep,powerGain,power,powerCost,powerQuote,format,resistance};
 })();
