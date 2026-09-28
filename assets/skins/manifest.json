@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "reuse_rule": "Preserve these files and paths across patches. Regenerate only when explicitly requested.",
+  "assets": [
+    {
+      "id": "default",
+      "path": "assets/skins/default-mage.png",
+      "sha256": "77ce24a7e8fa7e0922140be6f7e546df2c43f37b546a31eb080785fb5dda217f",
+      "bytes": 112402,
+      "source": "existing canvas preview"
+    },
+    {
+      "id": "blonde",
+      "path": "assets/skins/blonde-simple.png",
+      "sha256": "8f7559a58f33bcd32d46b942c6d346e01110f24d31af035281986d05ceef6299",
+      "bytes": 91425,
+      "source": "Canvas geometric character renderer; reusable preview"
+    },
+    {
+      "id": "elder",
+      "path": "assets/skins/elder-simple.png",
+      "sha256": "18687332c4e80a8545c5990d0ac7165f008e2f9d33b6413d018a1c8905a60e0e",
+      "bytes": 88657,
+      "source": "Canvas geometric character renderer; reusable preview"
+    },
+    {
+      "id": "elf",
+      "path": "assets/skins/elf-simple.png",
+      "sha256": "8dee4445ba5590d60fd3656f79f9d96b697c6f45854fe3c530305853a19b0517",
+      "bytes": 79219,
+      "source": "Canvas geometric character renderer; reusable preview"
+    },
+    {
+      "id": "demon",
+      "path": "assets/skins/demon-simple.png",
+      "sha256": "c9253a6ac19c63c7a69d0a89726053f97f8f1690b89e6b8a7518d094c0e14db8",
+      "bytes": 93001,
+      "source": "Canvas geometric character renderer; reusable preview"
+    }
+  ]
+}
