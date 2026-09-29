@@ -3,7 +3,7 @@
 const C=MAGE_CONFIG,I=MAGE_ITEMS,S=MAGE_SKILLS,$=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d');
 const TAU=Math.PI*2, testMode=new URLSearchParams(location.search).has('test');
 const blankLevels=()=>({damage:0,cast:0,cooldown:0,range:0});
-const fresh=()=>({version:5,contentVersion:51,inventorySort:'newest',dropChests:[],fragments:[0,0,0],forgeCount:0,gachaSeconds:0,gachaDraws:0,skinId:'default',powerLevel:0,skillLevels:S.blank(),activeSlots:['energyBolt',null,null],cooldowns:{},bossCleared:[],fullSetPending:[],fullSetClaimed:[],energyCasts:0,migration:null,recommendMode:'balanced',uniqueClaimed:[],uniqueChests:[],shield:0,tier:0,levels:Array.from({length:10},blankLevels),gold:C.startGold,stage:1,best:1,kills:0,bossActive:false,hp:100,inventory:[],equipped:{},drops:0,totalKills:0,deaths:0,dead:false,started:false,sound:false,lowFX:matchMedia('(prefers-reduced-motion: reduce)').matches});
+const fresh=()=>({version:5,contentVersion:52,inventorySort:'newest',dropChests:[],fragments:[0,0,0],forgeCount:0,gachaSeconds:0,gachaDraws:0,skinId:'default',powerLevel:0,skillLevels:S.blank(),activeSlots:['energyBolt',null,null],cooldowns:{},bossCleared:[],fullSetPending:[],fullSetClaimed:[],energyCasts:0,migration:null,recommendMode:'balanced',uniqueClaimed:[],uniqueChests:[],shield:0,tier:0,levels:Array.from({length:10},blankLevels),gold:C.startGold,stage:1,best:1,kills:0,bossActive:false,hp:100,inventory:[],equipped:{},drops:0,totalKills:0,deaths:0,dead:false,started:false,sound:false,lowFX:matchMedia('(prefers-reduced-motion: reduce)').matches});
 let state=fresh(),storageOK=true;
 function validate(v){
  if(!v||![1,2,3,4,5].includes(v.version))throw Error('지원하지 않는 저장 파일입니다.');
@@ -43,12 +43,32 @@ function validate(v){
  clean.skinId=C.skins.some(s=>s.id===v.skinId)?v.skinId:'default';
  return clean;
 }
-let loadError='',protectSave=false;try{const raw=localStorage.getItem(C.saveKey);if(raw){const parsed=JSON.parse(raw);if(parsed.version===5&&(parsed.contentVersion||0)<51)localStorage.setItem(C.saveKey+'-pre-v051-backup',raw);if(parsed.version===5&&(parsed.contentVersion||0)<50)localStorage.setItem(C.saveKey+'-pre-v050-backup',raw);if(parsed.version===5&&!parsed.contentVersion)localStorage.setItem(C.saveKey+'-pre-v040-backup',raw);if(parsed.version<5)localStorage.setItem(C.saveKey+'-pre-v030-backup',raw);state=validate(parsed);}}catch(e){loadError='저장 데이터를 읽지 못했습니다. 원본은 보호됩니다. 설정에서 백업을 가져와 주세요.';storageOK=false;protectSave=true;}
+let loadError='',protectSave=false;try{const raw=localStorage.getItem(C.saveKey);if(raw){const parsed=JSON.parse(raw);if(parsed.version===5&&(parsed.contentVersion||0)<52)localStorage.setItem(C.saveKey+'-pre-v052-backup',raw);if(parsed.version===5&&(parsed.contentVersion||0)<51)localStorage.setItem(C.saveKey+'-pre-v051-backup',raw);if(parsed.version===5&&(parsed.contentVersion||0)<50)localStorage.setItem(C.saveKey+'-pre-v050-backup',raw);if(parsed.version===5&&!parsed.contentVersion)localStorage.setItem(C.saveKey+'-pre-v040-backup',raw);if(parsed.version<5)localStorage.setItem(C.saveKey+'-pre-v030-backup',raw);state=validate(parsed);}}catch(e){loadError='저장 데이터를 읽지 못했습니다. 원본은 보호됩니다. 설정에서 백업을 가져와 주세요.';storageOK=false;protectSave=true;}
 let orientationBlocked=false;const menuPositions={};
 let slotSignature=null,castingId=null,roundRobin=0,scheduled=[],enemies=[],effects=[],particles=[],texts=[],time=0,spawnClock=.1,pendingSpawn=0,phase='cast',phaseLeft=.2,phaseTotal=.2,manualPause=false,tab='magic',bulk='1',enemyID=0,newItems=0,lastSave=0,lastUI=0,lastTS=0,toastTimer,bannerTimer,shake=0,audioCtx;
 const hero={x:185,y:280};
 const summonEpoch={flameExplosion:0,iceSpear:0};
 let runeActive=false,runeClock=0,lastRunePulse=-100,lastOvercharge=-100,waveCount=0;
+// Runtime-only measurements. Quarter-second buckets bound memory even during long sessions.
+let meterClock=0,meterEpoch=0,meterBuckets=new Map(),meterTotals={};
+const damageKinds={direct:'직접',dot:'지속/장판',summon:'소환체',burn:'화상',shatter:'파쇄',overcharge:'과충전',resonance:'공명'};
+function resetCombatStats(){meterClock=0;meterEpoch++;meterBuckets.clear();meterTotals={};}
+function recordDamage(id,amount,kind='direct',epoch=meterEpoch){
+ if(epoch!==meterEpoch||!state.activeSlots.includes(id)||!id||!Number.isFinite(amount)||amount<=0)return;
+ const key=Math.floor(meterClock*4);let bucket=meterBuckets.get(key);if(!bucket){bucket={};meterBuckets.set(key,bucket);}
+ for(const table of [bucket,meterTotals]){const row=table[id]||={total:0,parts:{}};row.total+=amount;row.parts[kind]=(row.parts[kind]||0)+amount;}
+}
+function combatSnapshot(){
+ const recent={},cutoff=meterClock-30;for(const [key,bucket]of meterBuckets){if((key+1)/4<=cutoff){meterBuckets.delete(key);continue;}
+  const weight=Math.min(1,Math.max(0,((key+1)/4-cutoff)*4));
+  for(const [id,row]of Object.entries(bucket)){const out=recent[id]||={total:0,parts:{}};out.total+=row.total*weight;for(const [kind,amount]of Object.entries(row.parts))out.parts[kind]=(out.parts[kind]||0)+amount*weight;}
+ }
+ const seconds=Math.min(30,meterClock),rows=state.activeSlots.filter(Boolean).map(id=>({id,name:S.byId[id].name,recent:recent[id]?.total||0,dps:seconds>0?(recent[id]?.total||0)/seconds:0,total:meterTotals[id]?.total||0,parts:recent[id]?.parts||{}}));
+ const total=rows.reduce((sum,r)=>sum+r.recent,0);return{seconds,elapsed:meterClock,total,rows,dps:seconds>0?total/seconds:0};
+}
+function openCombatStats(){const s=combatSnapshot();modal('<h2 id="modalTitle">실제 전투 통계</h2><p class="lead">최근 '+s.seconds.toFixed(1)+'초 · 실제 DPS <b>'+number(s.dps)+'</b></p>'+s.rows.map(r=>'<section class="damage-row" style="--spell:'+S.byId[r.id].color+'"><div><strong>'+r.name+'</strong><b>'+number(r.dps)+' DPS</b></div><div class="damage-track"><i style="width:'+(s.total?r.recent/s.total*100:0)+'%"></i></div><p>최근 피해 '+number(r.recent)+' · 비중 '+(s.total?r.recent/s.total*100:0).toFixed(1)+'%<br>측정 누적 '+number(r.total)+'</p><small>'+Object.entries(r.parts).map(([kind,value])=>(damageKinds[kind]||kind)+' '+number(value)).join(' · ')+'</small></section>').join('')+'<p class="hint left">측정 시간 '+s.elapsed.toFixed(1)+'초 · 최대 최근 30초, 0.25초 단위 집계<br>모든 적의 HP에서 실제로 차감한 피해를 합산합니다. 다중 대상 합산이므로 기준 DPS와 다를 수 있습니다. 내성·화상·파쇄 포함, 과잉 피해 제외. 메뉴·일시정지·사망 중 시간은 제외하며 전투 중 적을 기다리는 시간은 포함합니다.<br>화상은 가장 강한 기본 화상을 제공한 스킬에 귀속됩니다. 과충전은 룬에 포함됩니다.<br>스킬 교체·전체 초기화·부활·재접속 시 새 측정. 이전 공격의 잔여 피해는 새 측정에서 제외합니다.</p><button class="subtle" id="resetCombatStatsBtn">측정 초기화</button>');$('resetCombatStatsBtn').onclick=()=>{resetCombatStats();openCombatStats();};}
+
+const energyEpoch={magicArrow:0,arcaneBurst:0};
 const skinImages=new Map();let skinCardsSignature='';
 function skinConfig(id=state.skinId){return C.skins.find(s=>s.id===id)||C.skins[0];}
 function skinSource(skin){return window.MAGE_SKIN_EMBEDDED?.[skin.id]||skin.path;}
@@ -107,6 +127,7 @@ function migrateSkills(clean,old){
 }
 function availableSP(){return 1+state.bossCleared.reduce((s,n)=>s+S.reward(n),0)-S.spent(state.skillLevels);}
 function resetSkills(){if(state.dead||S.spent(state.skillLevels)<=1)return false;const refunded=S.spent(state.skillLevels)-1;
+ resetCombatStats();
  state.skillLevels=S.blank();state.activeSlots=['energyBolt',null,null];state.cooldowns={energyBolt:spellStats('energyBolt').cooldown};state.energyCasts=0;runeActive=false;runeClock=0;lastOvercharge=-100;
  scheduled=[];castingId=null;roundRobin=0;phase='ready';phaseLeft=0;phaseTotal=1;effects=[];particles=[];texts=[];
  for(const e of enemies){e.burns=[];e.burnLeft=0;e.burnDPS=0;e.slow=0;e.novaUntil=0;e.novaSlow=0;e.iceStacks=0;e.ccUntil=0;e.ccLabel='';e.shockUntil=0;e.starStacks=0;e.markUntil=0;}
@@ -118,6 +139,7 @@ function learn(id){const n=S.byId[id];if(!n||state.dead||!S.available(state.skil
 function slotSkill(slot,id){if(state.dead||!Number.isInteger(slot)||slot<0||slot>2||id!==null&&(!S.byId[id]||S.byId[id].type!=='active'||!state.skillLevels[id]))return false;
  if(state.activeSlots[slot]===id)return false;if(id&&state.activeSlots.includes(id)){toast('같은 스킬은 한 슬롯에만 장착할 수 있어요.');return false;}if(!id&&state.activeSlots.filter(Boolean).length===1)return false;
  const removed=state.activeSlots[slot];if(removed in summonEpoch){summonEpoch[removed]++;effects=effects.filter(f=>f.spell!==removed);}
+ if(removed in energyEpoch)energyEpoch[removed]++;resetCombatStats();
  state.activeSlots[slot]=id;if(!state.activeSlots.includes('magicArrow')){runeActive=false;runeClock=0;}if(id)state.cooldowns[id]=spellStats(id).cooldown;castingId=null;phase='ready';phaseLeft=0;save();refresh();return true;}
 function awardBoss(stage){if(state.bossCleared.includes(stage))return false;state.bossCleared.push(stage);if(stage%100===0&&!state.fullSetClaimed.includes(stage)){state.fullSetClaimed.push(stage);state.fullSetPending.push(stage);}toast('최초 처치 · SP +'+S.reward(stage)+(stage%100===0?' · 유니크 풀세트 보관':''));return true;}
 function claimFullSet(stage){if(state.dead||!state.fullSetPending.includes(stage))return false;if(state.inventory.length+7>C.inventoryLimit){toast('보관함 7칸을 비워 주세요. 풀세트 보상은 보관됩니다.');return false;}for(let slot=0;slot<7;slot++)state.inventory.push(I.rollSet(I.create(stage,slot,2,true,'set-'+stage+'-'+slot)));if(!state.uniqueClaimed.includes(stage))state.uniqueClaimed.push(stage);state.fullSetPending=state.fullSetPending.filter(n=>n!==stage);save();refresh();return true;}
@@ -133,7 +155,7 @@ function hpAt(s){return baseHPAt(s);}
 function bossHPAt(s){return baseBossHPAt(s)*hpCorrection(s,C.bossHPAnchors);}
 function enemyHPLabel(){const boss=enemies.find(e=>e.boss&&e.hp>0&&!e.rewarded);return boss?'BOSS HP '+number(Math.max(0,boss.hp))+' / '+number(boss.maxHP):state.bossActive?'BOSS HP '+number(bossHPAt(state.stage)):'적 HP '+number(hpAt(state.stage));}
 function slotGaugeState(i,cdr=character(state).cdr){const id=state.activeSlots[i];if(!id)return{phase:'empty',fill:0,cast:0,label:'＋'};if(id==='magicArrow'&&runeActive){const interval=spellStats(id).runeInterval;return{phase:'ready',fill:Math.max(0,Math.min(1,1-runeClock/interval)),cast:0,label:'ACTIVE · '+Math.max(0,runeClock).toFixed(1)+'s'};}if(castingId===id)return{phase:'casting',fill:1,cast:Math.max(0,Math.min(1,1-phaseLeft/phaseTotal)),label:'CASTING'};const left=state.cooldowns[id]||0,total=S.byId[id].cd*(1-cdr);return{phase:left>0?'cooldown':'ready',fill:Math.max(0,Math.min(1,1-left/total)),cast:0,label:left>0?left.toFixed(1)+'s':'READY'};}
-function refreshSlotGauges(){refreshEnergyGauge();const cdr=character(state).cdr;state.activeSlots.forEach((id,i)=>{const info=slotGaugeState(i,cdr),slot=$('activeSlot'+i);if(!slot)return;slot.dataset.phase=info.phase;$('slotFill'+i).style.transform='scaleX('+info.fill+')';$('slotCast'+i).style.transform='scaleX('+info.cast+')';$('slotStatus'+i).textContent=info.label;slot.setAttribute('aria-label','슬롯 '+(i+1)+' · '+(S.byId[id]?.name||'비어 있음')+' · '+info.label+' · 눌러서 교체');});}
+function refreshSlotGauges(){refreshEnergyGauge();const cdr=character(state).cdr,meter=combatSnapshot();state.activeSlots.forEach((id,i)=>{const info=slotGaugeState(i,cdr),slot=$('activeSlot'+i);if(!slot)return;slot.dataset.phase=info.phase;$('slotFill'+i).style.transform='scaleX('+info.fill+')';$('slotCast'+i).style.transform='scaleX('+info.cast+')';$('slotStatus'+i).textContent=info.label;const reading=$('slotDps'+i);if(reading)reading.textContent=id?'실제 DPS '+(meter.seconds?number(meter.rows.find(r=>r.id===id)?.dps||0):'—'):'—';slot.setAttribute('aria-label','슬롯 '+(i+1)+' · '+(S.byId[id]?.name||'비어 있음')+' · '+info.label+' · 눌러서 교체');});}
 function quote(){return S.powerQuote(state.powerLevel,state.gold,bulk);}
 function save(){if(protectSave){$('saveStatus').textContent='원본 보호 중 · 백업 가져오기';return;}try{localStorage.setItem(C.saveKey,JSON.stringify(state));storageOK=true;$('saveStatus').textContent='저장됨';$('saveStatus').classList.remove('save-warning');}catch(e){storageOK=false;$('saveStatus').textContent='저장 불가 · 백업 권장';$('saveStatus').classList.add('save-warning');}}
 function toast(s){$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3300);}
@@ -210,7 +232,7 @@ function dispensable(item){return !item.unique&&!Object.values(state.equipped).i
 function dropItem(stage){const slot=state.drops%7,r=rarity();state.drops++;if(state.inventory.length>=C.inventoryLimit){if(r===3){state.dropChests.push({stage,serial:state.drops});toast('유니크급 드롭 보관 · 장비 탭에서 수령');save();return null;}state.fragments[r]++;toast('보관함 가득 참 · '+forgeNames[r]+' 조각 +1');save();return null;}const item=I.rollSet(I.create(stage,slot,Math.min(2,r),r===3,'drop-'+state.drops));state.inventory.push(item);newItems++;toast(itemName(item)+' 획득 · 장비 탭에서 확인');save();return item;}
 function claimDrop(){if(state.dead||!state.dropChests.length||state.inventory.length>=C.inventoryLimit)return false;const reward=state.dropChests.shift();state.inventory.push(I.rollSet(I.create(reward.stage,(reward.serial-1)%7,2,true,'drop-'+reward.serial)));save();refresh();return true;}
 function kill(e){if(e.hp>0||e.rewarded)return;e.rewarded=true;spreadBurn(e);const reward=Math.round(e.gold*(1+stats().goldBonus));state.gold+=reward;state.totalKills++;burst(e.x,e.y-15,(S.byId[castingId||state.activeSlots.find(Boolean)]||S.byId.energyBolt).color,e.boss?28:7);float(e.x,e.y-25,'+'+number(reward),'#edc884',false);if(e.boss){dropItem(e.stage);awardBoss(e.stage);if(e.stage%100!==0)awardUnique(e.stage);state.stage=Math.min(C.maxStage,state.stage+1);state.best=Math.max(state.best,state.stage);state.kills=0;state.bossActive=false;state.hp=Math.min(stats().hp,state.hp+stats().hp*(hasUnique('boots')?.4:.3));banner(state.stage===C.maxStage?'최종 구간 · STAGE '+C.maxStage:'STAGE '+state.stage+' · 새로운 구간');spawnClock=.5;pendingSpawn=0;save();}else if(!state.bossActive&&e.stage===state.stage){state.kills=Math.min(stageGoal(),state.kills+1);if(state.kills>=stageGoal()){state.bossActive=true;pendingSpawn=0;spawn(true);banner(state.stage%100===0?'대보스 · ARCANE OVERLORD':state.stage%10===0?'강화보스 · RIFT WARDEN':'보스 출현');sound(150,.35,'triangle');save();}}}
-function applyDamage(e,amount,color,tag=''){if(e.hp<=0||e.rewarded)return;e.hp-=amount;e.flash=.14;float(e.x,e.y-e.size-10,tag+number(amount),color,true);kill(e);}
+function applyDamage(e,amount,color,tag='',source=null,kind='direct',epoch=meterEpoch){if(e.hp<=0||e.rewarded)return;recordDamage(source,Math.min(e.hp,Math.max(0,amount)),kind,epoch);e.hp-=amount;e.flash=.14;float(e.x,e.y-e.size-10,tag+number(amount),color,true);kill(e);}
 function freezeOrStun(e,duration,label){if(label==='빙결')duration*=coldDuration();if(time<e.ccImmuneUntil)return false;e.ccUntil=time+duration;e.ccImmuneUntil=e.ccUntil+(e.boss?2.5:1);e.ccLabel=label;return true;}
 function setCount(id){return I.setCounts(state)[id]||0;}
 function coldDuration(){return passive('cold')&&setCount('ice')>=3?1.15:1;}
@@ -219,45 +241,54 @@ function pierceLoss(){return .18;}
 function passive(id){return state.skillLevels[id]||0;}
 function resistDamage(e,amount,family){const r=S.resistance(e.stage);return amount*(family===r.family?1-r.value:1);}
 // One shared burn per enemy: the strongest active base DPS, one refreshed timer, three intensity stages.
-function addBurn(e,dps,duration,spread=false,increment=true,stage=1){
+function addBurn(e,dps,duration,spread=false,increment=true,stage=1,source=null,epoch=meterEpoch){
  if(e.hp<=0||e.rewarded)return;
  if(!spread&&passive('blaze')){if(setCount('fire')>=3)duration+=1;if(setCount('fire')>=5)dps*=1.25;}
  const old=e.burns?.[0],live=old&&old.left>0;
  const stacks=live?Math.min(3,Math.max(old.stacks||1,spread?stage:1)+(increment&&!spread?1:0)):Math.min(3,spread?stage:1);
- e.burns=[{dps:live?Math.max(old.dps,dps):dps,left:duration,stacks,spread:live?old.spread&&spread:spread}];
+ const owner=live&&old.dps>dps?old:{source,epoch};
+ e.burns=[{source:owner.source,epoch:owner.epoch,dps:live?Math.max(old.dps,dps):dps,left:duration,stacks,spread:live?old.spread&&spread:spread}];
  e.burnLeft=duration;e.burnDPS=e.burns[0].dps*[0,1,1.2,2][stacks];
 }
-function spreadBurn(e){if(!passive('spread')||!e.burns?.length||e.burns.every(b=>b.spread))return;const b=e.burns[0];for(const other of enemies)if(other!==e&&other.hp>0&&other.stage===e.stage&&Math.hypot(other.x-e.x,other.y-e.y)<=55+15*passive('spread'))addBurn(other,b.dps,b.left,true,false,b.stacks);}
+function spreadBurn(e){if(!passive('spread')||!e.burns?.length||e.burns.every(b=>b.spread))return;const b=e.burns[0];for(const other of enemies)if(other!==e&&other.hp>0&&other.stage===e.stage&&Math.hypot(other.x-e.x,other.y-e.y)<=55+15*passive('spread'))addBurn(other,b.dps,b.left,true,false,b.stacks,b.source,b.epoch);}
 function hitSpell(e,raw,n,st,critical){if(e.hp<=0||e.rewarded)return;
  const amount=raw*(e.boss?1+st.bossBonus:1),shatter=n.family==='ice'&&n.id!=='blizzard'&&e.ccLabel==='빙결'&&e.ccUntil>time&&passive('shatter')>0;
- applyDamage(e,resistDamage(e,amount,n.family),critical?'#ffe4a8':n.color,critical?'✦ ':'');if(e.hp<=0)return;
- if(n.family==='fire'&&!st.noBurn)addBurn(e,amount*.12,3+.4*passive('blaze'));
+ applyDamage(e,resistDamage(e,amount,n.family),critical?'#ffe4a8':n.color,critical?'✦ ':'',n.id,st.damageKind||'direct',st.meterEpoch);if(e.hp<=0)return;
+ if(n.family==='fire'&&!st.noBurn)addBurn(e,amount*.12,3+.4*passive('blaze'),false,true,1,n.id,st.meterEpoch);
  if(n.family==='ice'&&n.id!=='blizzard'){
- if(shatter){e.ccUntil=time;e.iceStacks=0;e.ccLabel='';applyDamage(e,resistDamage(e,amount*.25*passive('shatter')*(setCount('ice')>=5?1.25:1),'ice'),'#edfbff','❄ ');burst(e.x,e.y-20,'#c9faff',20);}
+ if(shatter){e.ccUntil=time;e.iceStacks=0;e.ccLabel='';applyDamage(e,resistDamage(e,amount*.25*passive('shatter')*(setCount('ice')>=5?1.25:1),'ice'),'#edfbff','❄ ',n.id,'shatter',st.meterEpoch);burst(e.x,e.y-20,'#c9faff',20);}
  else{e.slow=2*coldDuration();if(passive('cold')){e.iceStacks++;if(e.iceStacks>=3){e.iceStacks=0;freezeOrStun(e,(.5+.15*passive('cold'))*(e.boss?.25:1),'빙결');}}}}
  if(n.family==='lightning'&&passive('shock')){e.shockUntil=time+3;if(Math.random()<.08*passive('shock'))freezeOrStun(e,(.18+.025*passive('shock'))*(e.boss?.3:1),'마비');}
- if(n.id==='starfall'){e.starStacks++;if(e.starStacks>=3){e.starStacks=0;burst(e.x,e.y-20,'#effbff',26);for(const other of enemies)if(other.hp>0&&other.stage===e.stage&&Math.hypot(other.x-e.x,other.y-e.y)<=st.radius*.45)applyDamage(other,raw*.6*(other.boss?1+st.bossBonus:1),'#def8ff','✧ ');}}
+ if(n.id==='starfall'){e.starStacks++;if(e.starStacks>=3){e.starStacks=0;burst(e.x,e.y-20,'#effbff',26);for(const other of enemies)if(other.hp>0&&other.stage===e.stage&&Math.hypot(other.x-e.x,other.y-e.y)<=st.radius*.45)applyDamage(other,raw*.6*(other.boss?1+st.bossBonus:1),'#def8ff','✧ ',n.id,'resonance',st.meterEpoch);}}
  if(n.id==='blackHole'&&!e.boss){const pull=.2+.035*passive('singularity');e.x=Math.max(e.stopX,e.x+(st.center.x-e.x)*pull);e.y+=(st.center.y-e.y)*pull;}
 }
 function schedule(delay,run){scheduled.push({at:time+delay,run});}
 function chargeNeed(){return setCount('energy')>=5?3:4;}
 function refreshEnergyGauge(){const box=$('energyGauge');if(!box)return;box.hidden=!passive('overcharge')||!state.activeSlots.some(id=>id&&S.byId[id].family==='energy');const need=chargeNeed(),charge=Math.min(need,state.energyCasts);box.innerHTML='<span>OVERCHARGE '+charge+'/'+need+'</span><span class="charge-pips">'+Array.from({length:need},(_,i)=>'<i class="'+(i<charge?'filled':'')+'"></i>').join('')+'</span>';}
-function runeWave(){
+function runePosition(){return{x:hero.x+82+Math.sin(time*1.4)*14,y:hero.y-58+Math.cos(time*1.8)*9};}
+function runeWave(epoch=meterEpoch){
  if(!runeActive||!state.activeSlots.includes('magicArrow')||!passive('overcharge')||state.dead)return false;
  if(time-lastOvercharge<.026)return false;lastOvercharge=time;waveCount++;
- const st=spellStats('magicArrow'),radius=st.radius*1.3,crit=Math.random()<st.crit,amount=st.damage*(1+.4*passive('overcharge'))*(crit?st.critMult:1);
- effects.push({spell:'runeWave',x:hero.x,y:hero.y-15,r:radius,age:0,duration:.65,color:'#e2caff'});
- for(const e of [...enemies])if(e.hp>0&&e.stage===state.stage&&Math.hypot(e.x-hero.x,e.y-hero.y)<=radius)hitSpell(e,amount,S.byId.magicArrow,st,crit);
+ const st=spellStats('magicArrow'),origin=runePosition(),radius=st.radius*1.3,crit=Math.random()<st.crit,amount=st.damage*(1+.4*passive('overcharge'))*(crit?st.critMult:1);
+ st.meterEpoch=epoch;st.damageKind='overcharge';
+ effects.push({spell:'runeWave',x:origin.x,y:origin.y,r:radius,age:0,duration:.65,color:'#e2caff'});
+ for(const e of [...enemies])if(e.hp>0&&e.stage===state.stage&&Math.hypot(e.x-origin.x,e.y-origin.y)<=radius)hitSpell(e,amount,S.byId.magicArrow,st,crit);
  return true;
 }
-function energyCharge(){if(!passive('overcharge'))return;state.energyCasts=Math.min(chargeNeed(),state.energyCasts+1);if(runeActive&&state.energyCasts>=chargeNeed()){state.energyCasts=0;runeWave();}}
+function energyCharge(epoch=meterEpoch){if(!passive('overcharge'))return;state.energyCasts=Math.min(chargeNeed(),state.energyCasts+1);if(runeActive&&state.energyCasts>=chargeNeed()){state.energyCasts=0;runeWave(epoch);}}
 function updateRune(dt){
  if(!runeActive)return;if(!state.activeSlots.includes('magicArrow')||!state.skillLevels.magicArrow||state.dead){runeActive=false;return;}
  const st=spellStats('magicArrow');runeClock=Math.min(runeClock,st.runeInterval);runeClock-=dt;if(runeClock>1e-8)return;runeClock+=st.runeInterval;
+ // Preserve the previous wide target selection, now with visible shots from the summon.
  const targets=enemies.filter(e=>e.hp>0&&e.stage===state.stage&&Math.hypot(e.x-hero.x,e.y-hero.y)<=st.radius);if(!targets.length)return;
- lastRunePulse=time;const crit=Math.random()<st.crit;
- for(const e of targets)hitSpell(e,st.damage*(crit?st.critMult:1),S.byId.magicArrow,st,crit);
- energyCharge();
+ lastRunePulse=time;const crit=Math.random()<st.crit,origin=runePosition(),stage=state.stage,epoch=energyEpoch.magicArrow;
+ st.meterEpoch=meterEpoch;st.damageKind='summon';
+ effects.push({spell:'runeShot',origin,targets:targets.map(e=>({x:e.x,y:e.y-15})),age:0,duration:.38,impactAt:.16,r:32,color:'#d5bdff'});
+ schedule(.16,()=>{
+  if(!runeActive||state.dead||state.stage!==stage||epoch!==energyEpoch.magicArrow)return;
+  let hits=0;for(const e of targets)if(e.hp>0&&!e.rewarded){hitSpell(e,st.damage*(crit?st.critMult:1),S.byId.magicArrow,st,crit);hits++;}
+  if(hits)energyCharge(st.meterEpoch);
+ });
 }
 function cast(id=state.activeSlots.find(Boolean)){
  const n=S.byId[id];if(!n||!state.skillLevels[id])return false;
@@ -269,7 +300,7 @@ function cast(id=state.activeSlots.find(Boolean)){
  const alive=enemies.filter(e=>e.hp>0&&e.x<=940).sort((a,b)=>a.x-b.x);if(!alive.length)return false;
  const st=spellStats(id),target=alive[0],critical=Math.random()<st.crit;let boost=1,consumeCharge=false;
  if(n.family==='energy'&&!runeActive&&passive('overcharge')&&state.energyCasts>=chargeNeed()){boost+=.25*passive('overcharge');consumeCharge=true;state.energyCasts=0;}
- const raw=st.damage*(critical?st.critMult:1)*boost,center={x:target.x,y:target.y};if(id==='thunderstorm'){center.x=alive.reduce((v,e)=>v+e.x,0)/alive.length;center.y=alive.reduce((v,e)=>v+e.y,0)/alive.length;}st.center=center;
+ const raw=st.damage*(critical?st.critMult:1)*boost,center={x:target.x,y:target.y};if(id==='thunderstorm'){center.x=alive.reduce((v,e)=>v+e.x,0)/alive.length;center.y=alive.reduce((v,e)=>v+e.y,0)/alive.length;}st.center=center;st.meterEpoch=meterEpoch;
  let hit=alive.filter(e=>Math.hypot(e.x-center.x,e.y-center.y)<=st.radius);
  if(n.family==='energy')hit=alive.filter(e=>Math.abs(e.y-center.y)<=st.radius*.65);
  if(n.id==='lightning'){hit=[target];let current=target;while(hit.length<st.level+3){const next=alive.filter(e=>!hit.includes(e)&&Math.hypot(e.x-current.x,e.y-current.y)<=st.radius).sort((a,b)=>Math.hypot(a.x-current.x,a.y-current.y)-Math.hypot(b.x-current.x,b.y-current.y))[0];if(!next)break;hit.push(next);current=next;}}
@@ -281,12 +312,15 @@ function cast(id=state.activeSlots.find(Boolean)){
  }
  if(n.id==='iceSpear')for(const e of hit){e.novaUntil=time+(2+.1*(st.level-1))*coldDuration();e.novaSlow=.3+.02*(st.level-1);}
  if(n.id==='arcaneBurst'){
- fx.impactAt=.2;fx.duration=.8;
+ fx.impactAt=.2;fx.duration=.8;fx.origin={x:hero.x+32,y:hero.y-15};fx.beamEnd={x:980,y:center.y-15};fx.beamWidth=st.radius*.35;
+ const epoch=energyEpoch.arcaneBurst;
  schedule(.2,()=>{
-  if(state.stage!==target.stage)return;
-  const victims=enemies.filter(e=>e.hp>0&&e.stage===target.stage&&Math.hypot(e.x-center.x,e.y-center.y)<=st.radius);
+  if(state.dead||state.stage!==target.stage||epoch!==energyEpoch.arcaneBurst)return;
+  const a=fx.origin,b=fx.beamEnd,dx=b.x-a.x,dy=b.y-a.y,length=dx*dx+dy*dy;
+  const victims=enemies.filter(e=>{if(e.hp<=0||e.stage!==target.stage)return false;const x=e.x,y=e.y-15,q=((x-a.x)*dx+(y-a.y)*dy)/length;return q>=0&&q<=1&&Math.hypot(x-a.x-q*dx,y-a.y-q*dy)<=fx.beamWidth;});
   for(const e of victims)hitSpell(e,raw,n,st,critical);
-  if(runeActive)runeWave();else if(victims.length&&!consumeCharge)energyCharge();
+  if(runeActive)fx.overcharged=runeWave(st.meterEpoch)||fx.overcharged;else if(victims.length&&!consumeCharge)energyCharge(st.meterEpoch);
+  if(!state.lowFX)shake=fx.overcharged?5:3;
  });
  }else{
  const ticks=n.id==='magicArrow'?3:n.id==='blizzard'||n.id==='thunderstorm'?4:n.id==='starfall'?3:n.id==='blackHole'?5:1;
@@ -294,19 +328,19 @@ function cast(id=state.activeSlots.find(Boolean)){
  const run=()=>{let targets=ticks>1&&n.family!=='energy'?enemies.filter(e=>e.hp>0&&e.stage===target.stage&&Math.hypot(e.x-center.x,e.y-center.y)<=st.radius):hit;
  const energyHit=n.id==='energyBolt'&&targets.some(e=>e.hp>0&&!e.rewarded);
  for(const [i,e]of targets.entries()){const fall=n.family==='energy'?Math.pow(1-pierceLoss(),i):n.id==='lightning'?Math.max(.5,.9**i):1;hitSpell(e,raw/ticks*fall,n,st,critical);}
- if(energyHit&&!consumeCharge)energyCharge();
+ if(energyHit&&!consumeCharge)energyCharge(st.meterEpoch);
  if(n.family==='lightning'&&passive('jump')){const extra=enemies.filter(e=>e.hp>0&&e.stage===target.stage&&!targets.includes(e)&&targets.some(t=>Math.hypot(e.x-t.x,e.y-t.y)<=st.radius)).slice(0,jumpCount());for(const e of extra){hitSpell(e,raw/ticks*.45,n,st,critical);effects.push({tier:4,x:e.x,y:e.y,targets:[{x:center.x,y:center.y},{x:e.x,y:e.y}],age:0,duration:.35,r:30,color:n.color,seed:1});}}
  };if(n.id==='meteor')schedule(.32,()=>{run();burst(center.x,center.y-20,n.color,20);if(!state.lowFX)shake=4;});else if(tick===0)run();else schedule(tick*(n.family==='energy'?.1:.35),run);
  }}
- if(n.id!=='meteor')burst(center.x,center.y-20,n.color,n.rank>=3?20:7);if(n.rank>=3&&n.id!=='meteor')shake=state.lowFX?0:4;sound(n.family==='energy'?520:n.family==='fire'?110:260,.12,'triangle',.018);return true;
+ if(!['meteor','arcaneBurst'].includes(n.id))burst(center.x,center.y-20,n.color,n.rank>=3?20:7);if(n.rank>=3&&!['meteor','arcaneBurst'].includes(n.id))shake=state.lowFX?0:4;sound(n.family==='energy'?520:n.family==='fire'?110:260,.12,'triangle',.018);return true;
 }
 function castElectricArea(n,st,center,stage,critical,fx){
  const lancer=n.id==='chainLightning',mult=critical?st.critMult:1;
  fx.duration=st.duration+.25;fx.bolts=[];fx.flashAt=-10;
- const apply=(targets,amount)=>{
+ const apply=(targets,amount,kind=lancer?'summon':'direct')=>{
   fx.bolts=targets.map(e=>({x:e.x,y:e.y-15}));
-  for(const e of targets)hitSpell(e,amount,n,st,critical);
-  if(passive('jump')){const extra=enemies.filter(e=>e.hp>0&&e.stage===stage&&!targets.includes(e)&&targets.some(a=>Math.hypot(e.x-a.x,e.y-a.y)<=st.radius)).slice(0,jumpCount());for(const e of extra){hitSpell(e,amount*.45,n,st,critical);fx.bolts.push({x:e.x,y:e.y-15});}}
+  for(const e of targets)hitSpell(e,amount,n,{...st,damageKind:kind},critical);
+  if(passive('jump')){const extra=enemies.filter(e=>e.hp>0&&e.stage===stage&&!targets.includes(e)&&targets.some(a=>Math.hypot(e.x-a.x,e.y-a.y)<=st.radius)).slice(0,jumpCount());for(const e of extra){hitSpell(e,amount*.45,n,{...st,damageKind:kind},critical);fx.bolts.push({x:e.x,y:e.y-15});}}
  };
  if(lancer){
   fx.lancer=true;fx.x=center.x-65;fx.y=center.y-15;fx.reach=st.radius*2+65;fx.hitCount=st.hitCount;
@@ -321,7 +355,7 @@ function castElectricArea(n,st,center,stage,critical,fx){
   const targets=()=>enemies.filter(e=>e.hp>0&&e.stage===stage&&Math.hypot(e.x-center.x,e.y-center.y)<=st.radius);
   const first=targets();for(const e of first)freezeOrStun(e,e.boss?.12:.4,'마비');
   apply(first,st.damage*mult);fx.flashAt=0;
-  for(let j=1;j<=8;j++)schedule(j*.5,()=>{if(state.stage!==stage)return;fx.flashAt=j*.5;apply(targets(),st.dotDps*.5*mult);});
+  for(let j=1;j<=8;j++)schedule(j*.5,()=>{if(state.stage!==stage)return;fx.flashAt=j*.5;apply(targets(),st.dotDps*.5*mult,'dot');});
  }
  fx.bornAt=time;sound(180,.16,'triangle',.018);
 }
@@ -379,7 +413,7 @@ function castElementSummon(n,st,center,stage,critical,fx){
    fx.flashAt=.8*(j+1);fx.volleys.push({at:fx.flashAt,x:target.x,y:target.y-15,r:radius,phase:j+1});
    for(const e of alive().filter(e=>Math.hypot(e.x-target.x,e.y-target.y)<=radius)){
     e.novaUntil=time+(2+.1*(st.level-1))*coldDuration();e.novaSlow=.3+.02*(st.level-1);
-    hitSpell(e,amount,n,st,critical);
+    hitSpell(e,amount,n,{...st,damageKind:'summon'},critical);
    }
    sound(360+j*70,.1,'triangle',.015);
   });return;
@@ -404,9 +438,9 @@ function castElementSummon(n,st,center,stage,critical,fx){
   if(!valid())return;const active=tornadoes.filter(t=>t.at<=mid&&t.end>mid);
   for(const e of alive()){
    const overlapping=active.filter(t=>Math.hypot(e.x-t.x,e.y-t.y)<=t.r);if(!overlapping.length)continue;
-   hitSpell(e,st.dotDps*(end-start)*mult,n,{...st,noBurn:true},critical);
+   hitSpell(e,st.dotDps*(end-start)*mult,n,{...st,noBurn:true,damageKind:n.id==='flameExplosion'?'summon':'dot'},critical);
    if(e.hp<=0)continue;
-   for(const tor of overlapping){addBurn(e,st.dotDps*mult*(e.boss?1+st.bossBonus:1)*.12,3+.4*passive('blaze'),false,!tor.seen.has(e.id));tor.seen.add(e.id);}
+   for(const tor of overlapping){addBurn(e,st.dotDps*mult*(e.boss?1+st.bossBonus:1)*.12,3+.4*passive('blaze'),false,!tor.seen.has(e.id),1,n.id,st.meterEpoch);tor.seen.add(e.id);}
   }
  });}
 }
@@ -454,9 +488,9 @@ function castArea(n,st,center,stage,critical,fx){
  if(n.id==='meteor')schedule(delay,()=>{for(const e of targets(st.radius)){hitSpell(e,st.damage*mult,n,st,critical);burned.add(e.id);}burst(center.x,center.y-15,n.color,18);if(!state.lowFX)shake=4;});
  for(let t=0;t<st.duration-1e-8;t+=.5){const slice=Math.min(.5,st.duration-t);schedule(delay+t+slice,()=>{
  for(const e of targets(groundRadius)){
- hitSpell(e,st.dotDps*slice*mult,n,{...st,noBurn:true},critical);
+ hitSpell(e,st.dotDps*slice*mult,n,{...st,noBurn:true,damageKind:n.id==='flameExplosion'?'summon':'dot'},critical);
  if(e.hp<=0)continue;
- if(n.family==='fire'){addBurn(e,st.dotDps*mult*(e.boss?1+st.bossBonus:1)*.12,3+.4*passive('blaze'),false,!burned.has(e.id));burned.add(e.id);}
+ if(n.family==='fire'){addBurn(e,st.dotDps*mult*(e.boss?1+st.bossBonus:1)*.12,3+.4*passive('blaze'),false,!burned.has(e.id),1,n.id,st.meterEpoch);burned.add(e.id);}
  if(n.id==='blizzard'){e.slow=2*coldDuration();const hits=(iceHits.get(e.id)||0)+1;iceHits.set(e.id,hits);if(hits>=3&&!frozen.has(e.id)){frozen.add(e.id);freezeOrStun(e,(.6+.05*(st.level-1))*(e.boss?.25:1),'빙결');}}
  }
  });}
@@ -470,10 +504,10 @@ function advanceCasting(dt){
 }
 function damagePlayer(amount){const st=stats(),damage=amount*100/(100+st.armor),absorbed=Math.min(state.shield,damage);state.shield-=absorbed;state.hp-=damage-absorbed;return damage;}
 function die(){if(state.dead)return;runeActive=false;runeClock=0;state.energyCasts=0;state.dead=true;state.hp=0;state.shield=0;state.deaths++;save();refresh();showDeath();}
-function revive(){runeActive=false;runeClock=0;lastOvercharge=-100;state.stage=Math.max(1,state.stage-1);state.kills=0;state.bossActive=false;state.dead=false;state.hp=stats().hp;state.shield=hasUnique('cloak')?stats().hp*.1:0;enemies=[];effects=[];particles=[];texts=[];scheduled=[];castingId=null;roundRobin=0;spawnClock=.15;pendingSpawn=0;setPhase('cast');hideModal();manualPause=false;save();refresh();banner('STAGE '+state.stage+' · 다시 시작');}
-function update(dt){time+=dt;const due=scheduled.filter(x=>x.at<=time);scheduled=scheduled.filter(x=>x.at>time);for(const event of due)event.run();const st=stats();state.hp=Math.min(st.hp,state.hp+(st.hp*C.regenPerSecond+st.regen)*dt);if(!state.bossActive){spawnClock-=dt;if(spawnClock<=0&&pendingSpawn===0){pendingSpawn=packSize();spawnClock=packInterval();}while(pendingSpawn>0&&enemies.length<C.maxEnemies){spawn();pendingSpawn--;}}
+function revive(){resetCombatStats();energyEpoch.magicArrow++;energyEpoch.arcaneBurst++;runeActive=false;runeClock=0;lastOvercharge=-100;state.stage=Math.max(1,state.stage-1);state.kills=0;state.bossActive=false;state.dead=false;state.hp=stats().hp;state.shield=hasUnique('cloak')?stats().hp*.1:0;enemies=[];effects=[];particles=[];texts=[];scheduled=[];castingId=null;roundRobin=0;spawnClock=.15;pendingSpawn=0;setPhase('cast');hideModal();manualPause=false;save();refresh();banner('STAGE '+state.stage+' · 다시 시작');}
+function update(dt){time+=dt;meterClock+=dt;const due=scheduled.filter(x=>x.at<=time);scheduled=scheduled.filter(x=>x.at>time);for(const event of due)event.run();const st=stats();state.hp=Math.min(st.hp,state.hp+(st.hp*C.regenPerSecond+st.regen)*dt);if(!state.bossActive){spawnClock-=dt;if(spawnClock<=0&&pendingSpawn===0){pendingSpawn=packSize();spawnClock=packInterval();}while(pendingSpawn>0&&enemies.length<C.maxEnemies){spawn();pendingSpawn--;}}
  for(const e of [...enemies]){if(e.hp<=0)continue;e.flash=Math.max(0,e.flash-dt);e.slow=Math.max(0,e.slow-dt);
- if(e.burns?.length){for(const b of e.burns){const slice=Math.min(dt,b.left);b.left-=slice;e.hp-=resistDamage(e,b.dps*[0,1,1.2,2][b.stacks||1]*slice,'fire');}if(e.hp<=0){kill(e);continue;}e.burns=e.burns.filter(b=>b.left>0);e.burnLeft=e.burns.length?Math.max(...e.burns.map(b=>b.left)):0;if(!e.burns.length)e.burnDPS=0;}
+ if(e.burns?.length){for(const b of e.burns){const slice=Math.min(dt,b.left);b.left-=slice;const amount=resistDamage(e,b.dps*[0,1,1.2,2][b.stacks||1]*slice,'fire');recordDamage(b.source,Math.min(e.hp,amount),'burn',b.epoch);e.hp-=amount;}if(e.hp<=0){kill(e);continue;}e.burns=e.burns.filter(b=>b.left>0);e.burnLeft=e.burns.length?Math.max(...e.burns.map(b=>b.left)):0;if(!e.burns.length)e.burnDPS=0;}
  if(time<e.ccUntil)continue;
  if(e.x>e.stopX)e.x=Math.max(e.stopX,e.x-e.speed*(1-Math.max(e.slow>0?Math.min(.65,.15+.08*passive('cold')*Math.max(1,e.iceStacks)):0,time<(e.novaUntil||0)?e.novaSlow:0))*dt);
  else{e.attackCD-=dt;if(e.attackCD<=0){e.attackCD+=C.enemyAttackInterval;const taken=damagePlayer(e.attack);float(hero.x,hero.y-85,'−'+number(taken),'#ff9f9b',false);effects.push({tier:-1,x:hero.x,y:hero.y-35,age:0,duration:.2,color:'#ff9797',targets:[]});if(state.hp<=0){die();break;}}}}
@@ -516,7 +550,7 @@ function icon(slot){const shapes=[`<path d="M10 29 24 9M20 4l7 1 3 7-7 2-5-5z"/>
 function refresh(){refreshGacha();const st=stats(),r=S.resistance(state.stage),q=quote();
  $('stageNum').textContent=String(state.stage).padStart(2,'0');$('goldNum').textContent=number(state.gold);$('goldNum').title=precise(state.gold)+' 골드';$('hpText').textContent=number(Math.max(0,state.hp))+' / '+number(st.hp)+(state.shield>0?' · 보호막 '+number(state.shield):'');$('hpBar').style.width=Math.max(0,Math.min(100,state.hp/st.hp*100))+'%';$('attackText').textContent='적 공격력 '+number(attackAt(state.stage));$('stageGoal').textContent=state.bossActive?(state.stage%100===0?'ARCANE OVERLORD':state.stage%10===0?'RIFT WARDEN':'BOSS'):`보스까지 · ${packSize()}마리씩 / ${packInterval().toFixed(1)}초`;$('killsText').textContent=state.bossActive?'BOSS':number(state.kills)+' / '+number(stageGoal());$('killBar').style.width=state.kills/stageGoal()*100+'%';$('damageStat').textContent=number(st.magicPower);$('intervalStat').textContent=number(st.magicAtk);$('dpsStat').textContent=number(st.dps);$('bestStat').textContent=String(state.best).padStart(2,'0');$('zoneLabel').textContent=r.family.toUpperCase()+' RESISTANCE '+Math.round(r.value*100)+'%';$('biomeName').textContent=C.biomes[Math.floor((state.stage-1)/5)%5].name;$('battleState').textContent=state.dead?'부활 대기':isPaused()?'일시정지':'자동 전투';$('pauseBtn').textContent=manualPause?'▶':'Ⅱ';$('soundBtn').classList.toggle('on',state.sound);$('soundBtn').setAttribute('aria-label',state.sound?'소리 끄기':'소리 켜기');
  $('powerLevel').textContent='Lv.'+number(state.powerLevel);$('powerValue').textContent=number(st.magicPower);$('powerDetail').textContent='강화 누적 +'+number(S.powerGain(state.powerLevel))+' · 다음 레벨 +'+number(Math.round(S.powerStep(state.powerLevel+1)))+' · 지팡이와 곱연산';$('buyPower').disabled=!q.n||state.dead;$('buyPower').innerHTML='+'+number(q.n||1)+' 강화 <b>◈ '+number(q.cost||S.powerCost(state.powerLevel))+'</b>';$('spCount').textContent=availableSP()+' SP';$('treeSP').textContent=availableSP()+' SP 사용 가능';$('resetSkillsBtn').disabled=state.dead||S.spent(state.skillLevels)<=1;$('spSpent').textContent=S.spent(state.skillLevels)+' / 380 SP 투자';
- const signature=state.activeSlots.join('|');if(slotSignature!==signature){$('activeSlots').innerHTML=state.activeSlots.map((id,i)=>{const n=S.byId[id];return `<button id="activeSlot${i}" class="active-slot" data-slot-menu="${i}" style="--spell:${n?.color||'#888'}"><i id="slotFill${i}" class="slot-fill" aria-hidden="true"></i><small>SLOT ${i+1}</small><strong>${n?.name||'스킬 장착'}</strong><span id="slotStatus${i}"></span><i class="slot-cast-track" aria-hidden="true"><i id="slotCast${i}" class="slot-cast-fill"></i></i></button>`;}).join('');slotSignature=signature;}refreshSlotGauges();$('enemyHpLabel').textContent=enemyHPLabel();$('enemyHpLabel').classList.toggle('boss',state.bossActive);
+ const signature=state.activeSlots.join('|');if(slotSignature!==signature){$('activeSlots').innerHTML=state.activeSlots.map((id,i)=>{const n=S.byId[id];return `<button id="activeSlot${i}" class="active-slot" data-slot-menu="${i}" style="--spell:${n?.color||'#888'}"><i id="slotFill${i}" class="slot-fill" aria-hidden="true"></i><small>SLOT ${i+1}</small><strong>${n?.name||'스킬 장착'}</strong><span id="slotStatus${i}"></span><span class="slot-dps" id="slotDps${i}"></span><i class="slot-cast-track" aria-hidden="true"><i id="slotCast${i}" class="slot-cast-fill"></i></i></button>`;}).join('');slotSignature=signature;}refreshSlotGauges();$('enemyHpLabel').textContent=enemyHPLabel();$('enemyHpLabel').classList.toggle('boss',state.bossActive);
  $('newItems').hidden=!(newItems+state.uniqueChests.length+state.fullSetPending.length+state.dropChests.length);$('newItems').textContent=newItems+state.uniqueChests.length+state.fullSetPending.length+state.dropChests.length;
  if(tab==='equipment')renderEquipment();if(tab==='grimoire')renderGrimoire();if(tab==='character')renderCharacter();
 }
@@ -551,11 +585,11 @@ function isPaused(){return orientationBlocked||tab!=='magic'||manualPause||!$('m
 function showDeath(){modal(`<div class="eyebrow">THE JOURNEY CONTINUES</div><h2 id="modalTitle">잠시, 숨을 고르세요.</h2><div class="death-number">STAGE ${state.stage}</div><p class="lead">적들이 마법사를 압도했습니다.<br><b>${Math.max(1,state.stage-1)}스테이지</b>에서 체력을 회복하고 다시 시작합니다.<br>마법 · 강화 · 장비 · 골드는 모두 유지됩니다.</p><button class="primary" id="reviveBtn">한 걸음 뒤에서 다시 시작</button>`,false);$('reviveBtn').onclick=revive;}
 function help(){modal(`<div class="eyebrow">SKILL SYSTEM 2.0</div><h2 id="modalTitle">마력을 키우고, 마법을 조합하세요.</h2><ul><li>골드는 Magic Power 공통 강화에 사용합니다. 10레벨 구간 N마다 강화량 N × 1.05^(N−1)을 적용합니다. 소수점은 내부 누적됩니다.</li><li>피해 = Magic Power × Magic ATK × 스킬 계수. 이후 치명타·보스·내성을 적용합니다.</li><li>최초 보스 SP: 일반 1 / 10단위 5 / 100단위 10. 중복 지급 없음.</li><li>Energy Bolt Lv.1 기본 지급도 총 380 SP에 포함됩니다.</li><li>기본 계열: 앞 노드 Lv.1 + 마력 강화 10/30/50/100. 초월: 기존 전체 마스터 조건. 기본 액티브 상호 시너지 최대 +50%.</li><li>3슬롯 자유 조합 · READY 순환 자동시전 · 교체 시 전체 쿨타임.</li><li>스테이지 내성 10~40%. 초월은 4속성 내성 대상이 아닙니다.</li><li>10단위 유니크 선택 상자, 100단위는 대신 7부위 유니크급 보상. 유니크급 중 세트 30%, 5종 균등 추첨.</li><li>사망 n−1 부활. 보유 성장과 최초 보상 기록은 유지됩니다.</li><li>슬롯 선택·설정 팝업과 다른 앱 사용 중에는 전투가 일시정지합니다.</li></ul><p class="hint left">DPS는 장착 스킬 직접·장판 총 피해와 평균 치명타를 반영한 참고값입니다. 내성·다중 대상·상태효과·순환 지연에 따라 실전 피해는 달라집니다.</p><button class="primary" id="helpClose">계속하기</button>`);$('helpClose').onclick=hideModal;}
 function settings(){modal(`<div class="eyebrow">SETTINGS</div><h2 id="modalTitle">여정 관리</h2><p class="lead">현재 브라우저에 자동 저장됩니다.<br>파일 위치나 브라우저를 바꾸기 전에 백업을 보관하세요.</p><div class="setting-row"><button class="subtle" id="exportBtn">저장 파일 내보내기</button><button class="subtle" id="importBtn">저장 파일 가져오기</button></div><div class="setting-row"><button class="subtle" id="fxBtn">연출 ${state.lowFX?'가볍게':'풍부하게'} · 전환</button><button class="subtle danger" id="resetBtn">처음부터 시작</button></div><p class="hint left">기본 피해 ${precise(stats().damage)} · 시전 ${stats().cast.toFixed(3)}초 · 대기 ${stats().cooldown.toFixed(3)}초<br>스테이지 상한 1,000 · 시전시간 감소 65% / 쿨타임 감소 50% · 치명타 상한 60%</p>`);$('exportBtn').onclick=()=>{save();const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='MageRising_save_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('저장 파일을 내보냈어요.');};$('importBtn').onclick=()=>$('importFile').click();$('fxBtn').onclick=()=>{state.lowFX=!state.lowFX;save();settings();};$('resetBtn').onclick=()=>{modal('<div class="eyebrow">NEW JOURNEY</div><h2 id="modalTitle">처음부터 시작할까요?</h2><p class="lead">현재 마법·장비·골드가 삭제됩니다. 필요하다면 먼저 백업을 내보내 주세요.</p><button class="primary" id="confirmReset">진행 삭제 후 새로 시작</button><button class="subtle" id="cancelReset">취소</button>');$('confirmReset').onclick=()=>{protectSave=false;state=fresh();state.started=true;resetWorld();save();hideModal();showTab('magic');};$('cancelReset').onclick=settings;};}
-function resetWorld(){runeActive=false;runeClock=0;lastOvercharge=-100;waveCount=0;state.hp=Math.min(state.hp,stats().hp);state.shield=Math.min(state.shield,stats().hp*.1);enemies=[];effects=[];particles=[];texts=[];scheduled=[];castingId=null;roundRobin=0;spawnClock=.1;pendingSpawn=0;manualPause=false;newItems=0;setPhase('cast');if(state.bossActive&&!state.dead)spawn(true);}
+function resetWorld(){resetCombatStats();energyEpoch.magicArrow++;energyEpoch.arcaneBurst++;runeActive=false;runeClock=0;lastOvercharge=-100;waveCount=0;state.hp=Math.min(state.hp,stats().hp);state.shield=Math.min(state.shield,stats().hp*.1);enemies=[];effects=[];particles=[];texts=[];scheduled=[];castingId=null;roundRobin=0;spawnClock=.1;pendingSpawn=0;manualPause=false;newItems=0;setPhase('cast');if(state.bossActive&&!state.dead)spawn(true);}
 $('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(f.size>1000000)throw Error('파일이 너무 큽니다.');const imported=validate(JSON.parse(await f.text()));modal('<h2 id="modalTitle">백업으로 복원할까요?</h2><p class="lead">현재 진행을 선택한 저장 파일의 진행으로 교체합니다.</p><button class="primary" id="confirmImport">복원하기</button><button class="subtle" id="cancelImport">취소</button>');$('confirmImport').onclick=()=>{state=imported;protectSave=false;resetWorld();save();$('modal').hidden=true;if(state.dead)showDeath();else if(!state.started)welcome();refresh();toast('저장 파일을 복원했어요.');};$('cancelImport').onclick=settings;}catch(err){toast(err.message||'저장 파일을 읽을 수 없습니다.');}e.target.value='';};
 function welcome(){modal(`<div class="eyebrow">MAGE RISING · FIRST LIGHT</div><div class="modal-rune">✧</div><h2 id="modalTitle">마법사의 여정</h2><p class="lead">작은 에너지볼트에서 시작해<br>전장을 삼키는 블랙홀까지.<br><br>마력을 키우고 스킬트리를 완성하며<br>나만의 3슬롯 마법 조합을 만드세요.</p><button class="primary" id="startBtn">첫 번째 마법을 깨우기</button><p class="hint">자동 전투 · 14종 액티브 · 9종 패시브 · 7부위 장비</p>`,false);$('startBtn').onclick=()=>{state.started=true;save();hideModal();sound(660,.3);};}
 $('inventoryFilter').onchange=e=>{inventoryFilter=Number(e.target.value);renderEquipment();};$('menuClose').onclick=()=>showTab('magic');$('inventorySort').onchange=e=>{state.inventorySort=e.target.value;save();renderEquipment();};$('modalClose').onclick=hideModal;$('helpBtn').onclick=help;$('settingsBtn').onclick=()=>{if(!state.dead)settings();};$('pauseBtn').onclick=()=>{manualPause=!manualPause;refresh();};$('soundBtn').onclick=()=>{state.sound=!state.sound;sound(600,.15);save();refresh();};$('buyPower').onclick=buy;$('resetSkillsBtn').onclick=confirmSkillReset;$('openUniqueBtn').onclick=openUnique;$('recommendMode').onchange=e=>{state.recommendMode=e.target.value;save();refresh();};$('equipBestBtn').onclick=equipBest;$('claimDropBtn').onclick=claimDrop;$('forgeBtn').onclick=openForge;
-document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.gearSlot!==undefined){inventoryFilter=Number(b.dataset.gearSlot);renderEquipment();$('inventoryFilter').scrollIntoView({block:'start',behavior:'smooth'});}if(b.dataset.skin)selectSkin(b.dataset.skin);if(b.dataset.learn)learn(b.dataset.learn);if(b.dataset.slotMenu!==undefined)slotMenu(Number(b.dataset.slotMenu));if(b.dataset.chooseSkill){slotSkill(Number(b.dataset.targetSlot),b.dataset.chooseSkill);hideModal();}if(b.dataset.clearSlot!==undefined){slotSkill(Number(b.dataset.clearSlot),null);hideModal();}if(b.dataset.fullSet)claimFullSet(Number(b.dataset.fullSet));if(b.dataset.tab)showTab(b.dataset.tab);if(b.dataset.bulk){bulk=b.dataset.bulk;document.querySelectorAll('[data-bulk]').forEach(x=>x.classList.toggle('active',x.dataset.bulk===bulk));refresh();}if(b.dataset.equip)equip(b.dataset.equip);if(b.dataset.compare)compareItem(b.dataset.compare);if(b.dataset.absorb)openAbsorb(b.dataset.absorb);if(b.dataset.uniqueSlot!==undefined)claimUnique(Number(b.dataset.uniqueStage),Number(b.dataset.uniqueSlot));});
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.id==='combatStatsBtn')openCombatStats();if(b.dataset.gearSlot!==undefined){inventoryFilter=Number(b.dataset.gearSlot);renderEquipment();$('inventoryFilter').scrollIntoView({block:'start',behavior:'smooth'});}if(b.dataset.skin)selectSkin(b.dataset.skin);if(b.dataset.learn)learn(b.dataset.learn);if(b.dataset.slotMenu!==undefined)slotMenu(Number(b.dataset.slotMenu));if(b.dataset.chooseSkill){slotSkill(Number(b.dataset.targetSlot),b.dataset.chooseSkill);hideModal();}if(b.dataset.clearSlot!==undefined){slotSkill(Number(b.dataset.clearSlot),null);hideModal();}if(b.dataset.fullSet)claimFullSet(Number(b.dataset.fullSet));if(b.dataset.tab)showTab(b.dataset.tab);if(b.dataset.bulk){bulk=b.dataset.bulk;document.querySelectorAll('[data-bulk]').forEach(x=>x.classList.toggle('active',x.dataset.bulk===bulk));refresh();}if(b.dataset.equip)equip(b.dataset.equip);if(b.dataset.compare)compareItem(b.dataset.compare);if(b.dataset.absorb)openAbsorb(b.dataset.absorb);if(b.dataset.uniqueSlot!==undefined)claimUnique(Number(b.dataset.uniqueStage),Number(b.dataset.uniqueSlot));});
 $('gachaBtn').onclick=openGacha;
 window.addEventListener('orientationchange',checkOrientation);window.screen?.orientation?.addEventListener('change',checkOrientation);checkOrientation();
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').hidden&&tab!=='magic')showTab('magic');});
@@ -641,6 +675,7 @@ function drawSpellSheet(f){
 // Spell art now uses lightweight geometric Canvas effects.
 function drawReworkedEffect(f){
  if(f.summonKind)return drawElementSummon(f);
+ if(f.spell==='arcaneBurst')return drawBurstBeam(f);
  if(!['magicArrow','arcaneBurst','flameExplosion','meteor','iceSpear','blizzard'].includes(f.spell))return false;
  const t=f.age,p=t/f.duration,x=f.x,y=f.y,r=f.r;ctx.save();ctx.shadowBlur=0;ctx.globalAlpha=Math.min(1,(f.duration-t)*5);
  const poly=(pts,c)=>{ctx.fillStyle=c;ctx.beginPath();pts.forEach((v,i)=>i?ctx.lineTo(...v):ctx.moveTo(...v));ctx.closePath();ctx.fill();};
@@ -649,12 +684,6 @@ function drawReworkedEffect(f){
  const from=castOrigin();for(let i=0;i<3;i++){const q=Math.max(0,Math.min(1,(t-i*.1)/.28));if(t<i*.1||t>i*.1+.43)continue;
  ctx.save();ctx.translate(from.x+(x-from.x)*q,from.y+(y-from.y)*q+(i-1)*9);ctx.rotate(Math.atan2(y-from.y,x-from.x));
  line([[-70,0],[-15,0]],'#ba9cff66',5);line([[-30,0],[13,0]],'#e2d5ff',4);poly([[27,0],[8,-10],[12,0],[8,10]],'#f7f1ff');poly([[-21,0],[-35,-9],[-28,0],[-35,9]],'#ab8fe3');ctx.restore();}
- }else if(f.spell==='arcaneBurst'){
- const impact=f.impactAt||.7,q=Math.min(1,t/impact),o=f.origin||{x:185,y:265};
- if(t<impact){const xx=o.x+(x-o.x)*q,yy=o.y+(y-o.y)*q-Math.abs(Math.sin(t*15))*5,size=f.overcharged?27:21;
- for(let i=3;i>0;i--)ellipse(xx-i*15,yy,size*(1-i*.18),size*(1-i*.18),'#9c79d333');ellipse(xx,yy,size,size,'#8460bc');ellipse(xx,yy,size*.65,size*.65,'#d2b7ff');ellipse(xx+4,yy-4,size*.32,size*.32,'#fff3ff');
- for(let i=0;i<(f.pierced||0);i++){const a=t*(6+f.pierced)+i*TAU/Math.max(1,f.pierced),dx=xx+Math.cos(a)*(size+9),dy=yy+Math.sin(a)*(size+9);poly([[dx,dy-5],[dx+5,dy],[dx,dy+5],[dx-5,dy]],'#e6ceff');}
- }else{const q=(t-impact)/.6;ring(x,y,r*q,'#d7b9ff',7*(1-q)+1);if(f.overcharged)ring(x,y,r*q*.7,'#fff3ff',3);ellipse(x,y,Math.max(1,32*(1-q)),Math.max(1,32*(1-q)),'#f7e7ff');for(let i=0;i<(state.lowFX?8:16);i++){const a=i*TAU/16,dx=x+Math.cos(a)*r*q,dy=y+Math.sin(a)*r*q*.65;poly([[dx,dy-7],[dx+4,dy],[dx,dy+7],[dx-4,dy]],'#b793ed');}}
  }else if(f.spell==='iceSpear'){
  ring(x,y,r*Math.min(1,p*2),'#bfefff',6*(1-p)+1);for(let i=0;i<12;i++){const a=i*TAU/12,dx=x+Math.cos(a)*r*p,dy=y+Math.sin(a)*r*p*.4;poly([[dx,dy-12],[dx+6,dy+2],[dx-6,dy+2]],'#84cae0');}
  }else if(f.spell==='meteor'&&t<.32){
@@ -674,12 +703,41 @@ function drawReworkedEffect(f){
 }
 
 function drawRune(){
- if(!runeActive||state.dead)return;const x=hero.x,y=hero.y-45,t=time,charged=Math.max(0,1-(t-lastOvercharge)/.6),pulse=Math.max(0,1-(t-lastRunePulse)/.3),r=72+charged*18;
- ctx.save();ctx.translate(x,y);ctx.rotate(t*.24);ctx.strokeStyle=charged?'#fff2ff':'#bba4f0';ctx.lineWidth=2+charged*2;ctx.globalAlpha=.55+charged*.4;
- for(const scale of [1,.78]){ctx.beginPath();ctx.arc(0,0,r*scale,0,TAU);ctx.stroke();}
- for(let k=0;k<2;k++){ctx.beginPath();for(let j=0;j<3;j++){const a=j*TAU/3+k*Math.PI/3-Math.PI/2,xx=Math.cos(a)*r*.72,yy=Math.sin(a)*r*.72;j?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);}ctx.closePath();ctx.stroke();}
- for(let j=0;j<8;j++){const a=j*TAU/8;ctx.save();ctx.rotate(a);line([[r*.85,-4],[r*.94,0],[r*.85,4]],'#dfcaff',2);ctx.restore();}
- ctx.restore();if(pulse||charged){ctx.save();ctx.globalAlpha=(pulse+charged)*.35;ctx.strokeStyle=charged?'#fff0ff':'#c7afff';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(x,y+45,r+(1-Math.max(pulse,charged))*180,(r+(1-Math.max(pulse,charged))*180)*.35,0,0,TAU);ctx.stroke();ctx.restore();}
+ if(!runeActive||state.dead)return;const {x,y}=runePosition(),charged=Math.max(0,1-(time-lastOvercharge)/.6),pulse=Math.max(0,1-(time-lastRunePulse)/.3);
+ ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(time*1.4)*.08);ctx.scale(1+charged*.22,1+charged*.22);
+ ellipse(0,55,31,7,'#aa87e322');
+ const plate=[[-35,-32],[22,-39],[40,-13],[33,34],[-26,39],[-40,14]];
+ ctx.fillStyle='#665180';ctx.strokeStyle=charged?'#fff1ff':'#ba9ce3';ctx.lineWidth=3;ctx.beginPath();plate.forEach(([a,b],i)=>i?ctx.lineTo(a,b):ctx.moveTo(a,b));ctx.closePath();ctx.fill();ctx.stroke();
+ ctx.strokeStyle='#a487c8';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-29,-26);ctx.lineTo(19,-31);ctx.lineTo(31,-10);ctx.lineTo(25,27);ctx.lineTo(-23,30);ctx.closePath();ctx.stroke();
+ // Intentionally rough, readable rune marks like the user's sketch.
+ const color=charged||pulse?'#fff2ff':'#dfc8ff';line([[-21,-7],[-10,-20],[-4,-4],[-12,14],[14,8],[23,22]],color,3+pulse*2);
+ line([[1,-13],[25,-23],[19,5],[1,-13]],color,3);line([[-22,21],[-8,16],[-13,27]],'#b798e5',2);
+ if(charged||pulse){ctx.globalAlpha=Math.min(1,charged+pulse)*.7;ctx.strokeStyle='#eedaff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,47+(1-Math.max(charged,pulse))*12,0,TAU);ctx.stroke();}
+ ctx.restore();
+}
+function drawRuneShot(f){
+ if(f.spell!=='runeShot')return false;const q=Math.min(1,f.age/f.impactAt),after=Math.max(0,(f.age-f.impactAt)/(f.duration-f.impactAt));
+ ctx.save();ctx.globalAlpha=1-after;
+ for(const [i,to]of f.targets.entries()){
+  if(state.lowFX&&i%3)continue;const x=f.origin.x+(to.x-f.origin.x)*q,y=f.origin.y+(to.y-f.origin.y)*q;
+  if(q<1){const back=Math.max(0,q-.1);line([[f.origin.x+(to.x-f.origin.x)*back,f.origin.y+(to.y-f.origin.y)*back],[x,y]],'#a383d8',5);ellipse(x,y,7,5,'#f4dfff');}
+  else{ctx.strokeStyle='#cbb0f4';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(to.x,to.y,8+after*27,5+after*15,0,0,TAU);ctx.stroke();}
+ }
+ ctx.restore();return true;
+}
+function drawBurstBeam(f){
+ const t=f.age,o=f.origin,end=f.beamEnd,impact=f.impactAt;
+ if(!end)return false;ctx.save();
+ if(t<impact){const q=t/impact;ellipse(o.x,o.y,9+q*19,9+q*19,'#b194e4');ellipse(o.x,o.y,5+q*10,5+q*10,'#fff0ff');for(let i=0;i<6;i++){const a=i*TAU/6+t*7;line([[o.x+Math.cos(a)*(55-q*24),o.y+Math.sin(a)*(55-q*24)],[o.x+Math.cos(a)*20,o.y+Math.sin(a)*20]],'#cdb6f3',2);}}
+ else{
+  const p=(t-impact)/(f.duration-impact),fade=Math.max(0,1-p),width=f.beamWidth*2*(f.overcharged?1.15:1);
+  ctx.globalAlpha=fade;ctx.lineCap='round';
+  line([[o.x,o.y],[end.x,end.y]],'#7d58b8',width);line([[o.x,o.y],[end.x,end.y]],'#c2a0fa',width*.64);line([[o.x,o.y],[end.x,end.y]],'#fff0ff',width*.24);
+  ellipse(o.x,o.y,width*.35,width*.48,'#efdaff');
+  if(f.overcharged){for(let i=0;i<(state.lowFX?5:9);i++){const q=(p*2+i/9)%1,x=o.x+(end.x-o.x)*q,y=o.y+(end.y-o.y)*q;line([[x-25,y-width*.65],[x+12,y],[x-25,y+width*.65]],'#fff3ff',5);}}
+  const r=20+p*70;ctx.strokeStyle=f.overcharged?'#fff0ff':'#c6a6ed';ctx.lineWidth=5*fade+1;ctx.beginPath();ctx.ellipse(end.x,end.y,r*.5,r,0,0,TAU);ctx.stroke();
+ }
+ ctx.restore();return true;
 }
 function drawRuneWave(f){
  if(f.spell!=='runeWave')return false;const p=Math.min(1,f.age/f.duration),r=70+(f.r-70)*p;
@@ -688,7 +746,7 @@ function drawRuneWave(f){
  ctx.restore();return true;
 }
 
-function drawEffect(f){if(drawRuneWave(f)||drawElectricEffect(f)||drawReworkedEffect(f))return;const p=f.age/f.duration,a=Math.max(0,1-p),x=f.x,y=f.y;ctx.save();ctx.globalAlpha=a;const col=f.color;if(f.tier===-1){ellipse(x,y,25,35,'#ffb9ac33');ctx.restore();return;}ctx.shadowColor=col;ctx.shadowBlur=state.lowFX?0:13;const from=castOrigin();
+function drawEffect(f){if(drawRuneShot(f)||drawRuneWave(f)||drawElectricEffect(f)||drawReworkedEffect(f))return;const p=f.age/f.duration,a=Math.max(0,1-p),x=f.x,y=f.y;ctx.save();ctx.globalAlpha=a;const col=f.color;if(f.tier===-1){ellipse(x,y,25,35,'#ffb9ac33');ctx.restore();return;}ctx.shadowColor=col;ctx.shadowBlur=state.lowFX?0:13;const from=castOrigin();
  if(f.tier<=2){const q=Math.min(1,p*3),bx=from.x+(x-from.x)*q,by=from.y+(y-from.y)*q;line([[from.x,from.y],[bx,by]],col+'55',f.tier===0?3:5);if(f.tier===0){ellipse(bx,by,9,5,col);ellipse(bx,by,4,3,'#fff');}else{ctx.translate(bx,by);ctx.rotate(Math.atan2(y-from.y,x-from.x));ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(23,0);ctx.lineTo(-15,-6);ctx.lineTo(-8,0);ctx.lineTo(-15,6);ctx.closePath();ctx.fill();ctx.rotate(-Math.atan2(y-from.y,x-from.x));ctx.translate(-bx,-by);}if(q===1)rune(x,y,f.tier===0?f.r*(.4+.6*p):10+p*35,col,a*2);}
  if(f.tier===3){ctx.save();ctx.translate(x,y);ctx.scale(1,.55);rune(0,0,f.r*(.3+p*.7),col,p);for(let i=0;i<12;i++){const t=i*TAU/12;line([[Math.cos(t)*f.r*.3,Math.sin(t)*f.r*.3],[Math.cos(t)*f.r*p,Math.sin(t)*f.r*p]],col,2);}ctx.restore();}
  if(f.tier===4){let prev=from;for(const target of f.targets){const points=[[prev.x,prev.y]];for(let i=1;i<7;i++)points.push([prev.x+(target.x-prev.x)*i/7+Math.sin(i*7+f.seed)*9,prev.y+(target.y-prev.y)*i/7+Math.cos(i*5+f.age*12)*10]);points.push([target.x,target.y]);line(points,col,3);line(points,'#fff',1);prev=target;}}
@@ -705,5 +763,5 @@ function render(){if(tab!=='magic')return;const rect=canvas.getBoundingClientRec
 function frame(ts){const dt=lastTS?Math.min((ts-lastTS)/1000,.05):0;const onlineDt=lastTS?Math.max(0,(ts-lastTS)/1000):0;lastTS=ts;gachaTick(onlineDt);if(!isPaused())update(dt);render();refreshSlotGauges();if(ts-lastUI>180){refresh();lastUI=ts;}if(ts-lastSave>5000){if(state.started)save();lastSave=ts;}requestAnimationFrame(frame);}
 resetWorld();if(state.dead)showDeath();else if(!state.started)welcome();refresh();if(loadError)setTimeout(()=>toast(loadError),800);requestAnimationFrame(frame);
 // Test-only integration harness, absent unless explicitly opened with ?test=1.
-if(testMode)window.__mage={get state(){return state;},get enemies(){return enemies;},stats,recommendationScore,recommendedSet,compareItem,itemMods,dominates,equipBest,stageGoal,packSize,packInterval,hpAt,bossHPAt,baseHPAt,baseBossHPAt,hpCorrection,enemyHPLabel,slotGaugeState,refreshSlotGauges,attackAt,goldAt,validate,quote,number,character,spellStats,combinedStats,availableSP,learn,slotSkill,awardBoss,claimFullSet,cast,spawn,kill,damagePlayer,applyDamage,dropItem,awardUnique,claimUnique,uniqueItem,openUnique,salePrice,sellItem,confirmSell,sellWeak,buy,equip,revive,die,save,refresh,render,showTab,settings,resetWorld,get effects(){return effects;},get castingId(){return castingId;},get time(){return time;},get runeActive(){return runeActive;},get runeClock(){return runeClock;},get waveCount(){return waveCount;},runeWave,energyCharge,chargeNeed,updateRune,slotMenu,help,renderCharacter,renderGrimoire,resetSkills,confirmSkillReset,selectSkin,skinConfig,ensureSkin,castOrigin,drawHero,get scheduledCount(){return scheduled.length;},frame,isPaused,checkOrientation,sortedInventory,claimDrop,setCount,jumpCount,pierceLoss,coldDuration,castArea,addBurn,spreadBurn,drawReworkedEffect,openAbsorb,forgePlan,forgeOnce,enhanceLevel,enhanceMult,absorb,absorbPreview,itemLines,itemMods,gachaTick,openGacha,claimGacha,spellFrame,drawSpellSheet,ensureSpellImage,get spellImages(){return spellImages;},get skinImages(){return skinImages;},step(seconds){let n=Math.ceil(seconds/.025);for(let i=0;i<n&&!state.dead;i++)update(.025);refresh();},setState(v){state=validate(v);resetWorld();$('modal').hidden=true;refresh();},fresh};
+if(testMode)window.__mage={combatSnapshot,resetCombatStats,recordDamage,openCombatStats,hitSpell,runePosition,get state(){return state;},get enemies(){return enemies;},stats,recommendationScore,recommendedSet,compareItem,itemMods,dominates,equipBest,stageGoal,packSize,packInterval,hpAt,bossHPAt,baseHPAt,baseBossHPAt,hpCorrection,enemyHPLabel,slotGaugeState,refreshSlotGauges,attackAt,goldAt,validate,quote,number,character,spellStats,combinedStats,availableSP,learn,slotSkill,awardBoss,claimFullSet,cast,spawn,kill,damagePlayer,applyDamage,dropItem,awardUnique,claimUnique,uniqueItem,openUnique,salePrice,sellItem,confirmSell,sellWeak,buy,equip,revive,die,save,refresh,render,showTab,settings,resetWorld,get effects(){return effects;},get castingId(){return castingId;},get time(){return time;},get runeActive(){return runeActive;},get runeClock(){return runeClock;},get waveCount(){return waveCount;},runeWave,energyCharge,chargeNeed,updateRune,slotMenu,help,renderCharacter,renderGrimoire,resetSkills,confirmSkillReset,selectSkin,skinConfig,ensureSkin,castOrigin,drawHero,get scheduledCount(){return scheduled.length;},frame,isPaused,checkOrientation,sortedInventory,claimDrop,setCount,jumpCount,pierceLoss,coldDuration,castArea,addBurn,spreadBurn,drawReworkedEffect,openAbsorb,forgePlan,forgeOnce,enhanceLevel,enhanceMult,absorb,absorbPreview,itemLines,itemMods,gachaTick,openGacha,claimGacha,spellFrame,drawSpellSheet,ensureSpellImage,get spellImages(){return spellImages;},get skinImages(){return skinImages;},step(seconds){let n=Math.ceil(seconds/.025);for(let i=0;i<n&&!state.dead;i++)update(.025);refresh();},setState(v){state=validate(v);resetWorld();$('modal').hidden=true;refresh();},fresh};
 })();

@@ -7,9 +7,9 @@ window.MAGE_SKILLS=(()=>{
  function passive(id,name,family,description,cost=1){nodes.push({id,name,family,max:5,cost,type:'passive',description,color:colors[families.indexOf(family)]});}
  active('energyBolt','Energy Bolt','energy',1,1,1.3,42,0,'빠른 관통탄 · 적중 시 공유 과충전 1칸 · 관통당 피해 18% 감소');
  passive('piercing','마력 증폭','energy','레벨당 에너지 피해 +5% · 시너지/세트 피해와 합연산 · 과충전에도 1회 적용');
- active('magicArrow','Arcane Rune','energy',2,2.5,1,760,1,'장착 후 최초 시전으로 룬 1개 유지 · 넓은 주기 공격 · 적중 시 과충전 1칸 · 해제/사망 시 소멸');
+ active('magicArrow','Arcane Rune','energy',2,2.5,1,760,1,'떠다니는 룬 1개 · 넓은 범위에 마력탄 지속 발사 · 적중 시 과충전 1칸 · 충전 완료 시 원형 파동');
  passive('overcharge','과충전','energy','공유 4칸 충전 시 룬 파동 · 피해 룬 1회의 1+0.4×Lv배, 반경 1.3배 · 버스트는 게이지를 보존하고 강제 발동 · 룬 없으면 다음 에너지 공격 +25%×Lv');
- active('arcaneBurst','Arcane Burst','energy',3,5,12,190,10,'압축 마력 단발 광역 폭발 · 장판/상태이상 없음 · 활성 룬의 과충전 즉시 발동');
+ active('arcaneBurst','Arcane Burst','energy',3,5,12,190,10,'압축 후 굵은 관통 광선 · 적마다 단발 피해 · 활성 룬 과충전 연계 시 꺾쇠 충격파 · 장판/상태이상 없음');
  active('fireball','Fireball','fire',1,1.2,1.25,60,11,'착탄 폭발과 3초 화상');
  passive('blaze','맹화','fire','레벨당 화상 지속 +0.4초 · 화상 최대 3단계: ×1 / ×1.2 / ×2 · 재부여 시 시간 갱신');
  active('flameExplosion','Ifrit','fire',2,3,2,105,12,'이프리트 3차 공격: 회오리 1→2→3개 · 직접 피해 중복 없음 · 회오리별 화상 중첩 · 길막 없음');
