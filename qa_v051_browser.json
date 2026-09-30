@@ -1,0 +1,26 @@
+[
+  {
+    "w": 390,
+    "overflow": false,
+    "ifrit": true,
+    "guardian": true,
+    "names": true,
+    "errors": []
+  },
+  {
+    "w": 690,
+    "overflow": false,
+    "ifrit": true,
+    "guardian": true,
+    "names": true,
+    "errors": []
+  },
+  {
+    "w": 320,
+    "overflow": false,
+    "ifrit": true,
+    "guardian": true,
+    "names": true,
+    "errors": []
+  }
+]

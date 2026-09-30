@@ -64,3 +64,88 @@ html,body{height:100%;width:100%;overflow:hidden;overscroll-behavior:none}
 .active-slot .slot-dps{font-size:9px;color:#e5d9ff;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.2}
 .damage-row{border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0}.damage-row>div:first-child{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.damage-row strong{color:var(--spell);font-size:13px}.damage-row b{font-size:12px}.damage-row p,.damage-row small{font-size:11px;line-height:1.6;color:#beb8ce}.damage-track{height:6px;background:#29283c;margin-top:8px;border-radius:4px;overflow:hidden}.damage-track i{display:block;height:100%;background:var(--spell)}
 @media(max-height:640px){.active-slot .slot-dps{font-size:8px}}
+
+/* ===== v0.5.3 app-feel polish (visual layer only, no gameplay changes) ===== */
+html{touch-action:manipulation;-webkit-text-size-adjust:100%}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,select,textarea,.modal-card{-webkit-user-select:text;user-select:text}
+canvas,img{-webkit-touch-callout:none}
+
+/* splash: CSS-only auto hide so it can never get stuck */
+#splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:radial-gradient(ellipse at 50% 38%,#2c2652 0,#141628 55%,#0b0d16 100%);animation:splashOut .55s ease 1.05s forwards}
+#splash .splash-sigil{font-size:84px;line-height:1;color:#d9ccff;text-shadow:0 0 34px #a98bff,0 0 80px #7d5cff;animation:sigilFloat 2.2s ease-in-out infinite}
+#splash small{font-size:11px;letter-spacing:5px;color:#bdacff;margin-top:8px}
+#splash h1{font-size:26px;margin:0;letter-spacing:-.5px}
+#splash .splash-bar{width:150px;height:4px;border-radius:4px;background:#ffffff18;overflow:hidden;margin-top:22px}
+#splash .splash-bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7d5cff,#d9ccff);transform-origin:left;animation:splashLoad 1s ease-out forwards}
+@keyframes splashOut{to{opacity:0;visibility:hidden}}
+@keyframes splashLoad{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes sigilFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.06)}}
+
+/* header + battle card */
+.brand-sigil{animation:sigilGlow 3s ease-in-out infinite}
+@keyframes sigilGlow{0%,100%{text-shadow:0 0 16px #ad8dff66}50%{text-shadow:0 0 30px #c6acffcc}}
+.icon-btn{background:linear-gradient(180deg,#242743,#171a2c);border-color:#3a3d5c;box-shadow:0 2px 0 #0a0b14}
+.icon-btn:active{box-shadow:none}
+.battle-card{border-color:#4b4572;background:#0f1422;box-shadow:inset 0 0 0 1px #ffffff08,0 10px 34px #0007}
+.battle-top{background:linear-gradient(180deg,#2b2949,#1a1d31)}
+.wallet strong{text-shadow:0 0 14px #edc88455}
+.canvas-wrap::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 58%,#0009 100%);box-shadow:inset 0 0 0 #0000;transition:box-shadow .25s}
+.canvas-wrap.hurt::before{box-shadow:inset 0 0 38px #ff4a6acc;transition:none}
+body.lowhp .canvas-wrap::before{animation:lowHp 1.1s ease-in-out infinite}
+@keyframes lowHp{0%,100%{box-shadow:inset 0 0 14px #ff4a6a44}50%{box-shadow:inset 0 0 34px #ff4a6a99}}
+.hp{height:7px}
+.hp i{box-shadow:0 0 8px #7ff0c855;transition:width .25s,background .3s}
+.hp i.low{background:linear-gradient(90deg,#a63a4a,#ff7a86);box-shadow:0 0 10px #ff6b7a99}
+.stage-progress i{box-shadow:0 0 8px #baa7f0aa}
+.banner{font-size:25px;letter-spacing:2px;color:transparent;background:linear-gradient(180deg,#fff,#cfc0ff);-webkit-background-clip:text;background-clip:text;text-shadow:none;width:max-content;filter:drop-shadow(0 2px 5px #000) drop-shadow(0 0 16px #a48cff)}
+.banner.show{animation:bannerPop .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes bannerPop{from{transform:translate(-50%,-50%) scale(.55)}to{transform:translate(-50%,-50%) scale(1)}}
+
+/* number pops */
+.pop{animation:numPop .35s ease-out}
+@keyframes numPop{0%{transform:scale(1)}35%{transform:scale(1.28);filter:brightness(1.5)}100%{transform:scale(1)}}
+.wallet b,#stageNum,#powerLevel,#damageStat{display:inline-block}
+
+/* press feedback + ripple */
+button:not(:disabled):active{transform:scale(.96);filter:brightness(1.15)}
+button{transition:background .15s,transform .1s,filter .15s}
+.ripple{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,#ffffff66,#ffffff00 70%);transform:scale(0);animation:ripple .55s ease-out forwards}
+@keyframes ripple{to{transform:scale(1);opacity:0}}
+
+/* call-to-action glow */
+#buyPower:not(:disabled){animation:buyGlow 1.8s ease-in-out infinite}
+#buyPower:disabled{filter:grayscale(.65)}
+@keyframes buyGlow{0%,100%{box-shadow:0 0 0 0 #c9b0ff00}50%{box-shadow:0 0 16px 2px #c9b0ff77}}
+.gacha-strip.ready{border-color:#e0b7ff;background:linear-gradient(100deg,#3a2450,#231a36);animation:gachaReady 1.5s ease-in-out infinite}
+.gacha-strip.ready .subtle{background:linear-gradient(120deg,#d2b8ff,#aa95e7);color:#241b35;border-color:transparent;font-weight:700}
+@keyframes gachaReady{0%,100%{box-shadow:0 0 0 #c98bff00}50%{box-shadow:0 0 18px #c98bff77}}
+.active-slot[data-phase="ready"]::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;background:linear-gradient(110deg,transparent 40%,#ffffff22 50%,transparent 60%);transform:translateX(-100%);animation:slotShine 2.6s ease-in-out infinite}
+@keyframes slotShine{0%{transform:translateX(-100%)}55%,100%{transform:translateX(100%)}}
+
+/* bottom dock tabs */
+.tabs{padding:3px;gap:3px;border-color:#3a3556;border-radius:14px;background:linear-gradient(180deg,#1b1e33,#11131f)}
+.tabs button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:3px 0;border-radius:11px;font-size:10px;transition:background .2s,color .2s,transform .1s}
+.tab-ico{font-size:17px;line-height:1;transition:transform .2s}
+.tab-label{font-size:10px;line-height:1.1}
+.tabs button.active{background:linear-gradient(180deg,#46375f,#2c2343);box-shadow:inset 0 0 0 1px #8e73c866,0 0 14px #a98bff2e;color:#eadcff}
+.tabs button.active .tab-ico{transform:translateY(-1px) scale(1.12);text-shadow:0 0 12px #c2acff}
+.tabs .badge{position:absolute;top:2px;left:calc(50% + 8px);min-width:15px;height:15px;line-height:15px;padding:0 4px;border-radius:8px;text-align:center;font-size:9px;font-weight:800;background:linear-gradient(#ff9bb3,#ff6f93);color:#2a0d19;box-shadow:0 0 8px #ff7a9c99;animation:badgePulse 1.6s ease-in-out infinite}
+@keyframes badgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+@media(max-height:640px){.tab-ico{font-size:15px}.tab-label{font-size:9px}}
+
+/* screen transitions + bottom-sheet modals */
+.menu-screen:not([hidden]){animation:screenIn .24s ease-out}
+.app>main:not([hidden]){animation:screenFade .2s ease-out}
+@keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes screenFade{from{opacity:.4}to{opacity:1}}
+.modal{align-items:flex-end;padding:0}
+.modal-card{width:100%;max-width:520px;max-height:88dvh;border-radius:22px 22px 0 0;padding-bottom:calc(24px + env(safe-area-inset-bottom));animation:sheetUp .3s cubic-bezier(.2,.9,.3,1)}
+.modal-card::before{content:'';display:block;width:42px;height:4px;border-radius:4px;background:#ffffff30;margin:-12px auto 6px}
+@keyframes sheetUp{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+.toast{border-radius:999px;padding:11px 20px}
+
+/* install button (shown only when the browser allows install) */
+#installBtn{color:#e0cfff!important}
+
+@media(prefers-reduced-motion:reduce){#splash,#splash *,.brand-sigil,#buyPower,.gacha-strip.ready,.active-slot::after,.tabs .badge,.banner.show,.pop,.menu-screen,.app>main,.modal-card{animation:none!important}#splash{display:none}}
