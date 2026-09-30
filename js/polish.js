@@ -85,6 +85,23 @@ if(/^https?:$/.test(location.protocol)){
   });
 }
 
+/* Keep the screen on while the game is open (idle game). Re-acquires after the tab/app comes back.
+   Needs https (GitHub Pages is fine) and a browser that supports the Screen Wake Lock API. */
+safe(()=>{
+  if(!('wakeLock' in navigator))return;
+  let lock=null,busy=false;
+  async function keepAwake(){
+    if(busy||lock||document.hidden)return;
+    busy=true;
+    try{lock=await navigator.wakeLock.request('screen');lock.addEventListener('release',()=>{lock=null;});}
+    catch(e){lock=null;}
+    busy=false;
+  }
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)keepAwake();});
+  document.addEventListener('pointerdown',keepAwake,{passive:true});
+  keepAwake();
+});
+
 /* Remove splash from the DOM once its CSS fade has finished. */
 setTimeout(()=>{const s=$('splash');if(s)s.remove();},1900);
 })();
