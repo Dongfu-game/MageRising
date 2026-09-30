@@ -1,0 +1,130 @@
+[
+  {
+    "name": "energy",
+    "moving": false,
+    "count": 1,
+    "estimate": 270.62,
+    "actual": 263.47,
+    "waves": 29
+  },
+  {
+    "name": "fire",
+    "moving": false,
+    "count": 1,
+    "estimate": 191.08,
+    "actual": 223.88,
+    "waves": 0
+  },
+  {
+    "name": "lightning",
+    "moving": false,
+    "count": 1,
+    "estimate": 251.37,
+    "actual": 244.7,
+    "waves": 0
+  },
+  {
+    "name": "energy3",
+    "moving": false,
+    "count": 1,
+    "estimate": 278.18,
+    "actual": 271.08,
+    "waves": 42
+  },
+  {
+    "name": "energy",
+    "moving": false,
+    "count": 10,
+    "estimate": 270.62,
+    "actual": 2634.74,
+    "waves": 29
+  },
+  {
+    "name": "fire",
+    "moving": false,
+    "count": 10,
+    "estimate": 191.08,
+    "actual": 2238.81,
+    "waves": 0
+  },
+  {
+    "name": "lightning",
+    "moving": false,
+    "count": 10,
+    "estimate": 251.37,
+    "actual": 2447.02,
+    "waves": 0
+  },
+  {
+    "name": "energy3",
+    "moving": false,
+    "count": 10,
+    "estimate": 278.18,
+    "actual": 2502,
+    "waves": 42
+  },
+  {
+    "name": "energy",
+    "moving": true,
+    "count": 1,
+    "estimate": 270.62,
+    "actual": 265,
+    "waves": 30
+  },
+  {
+    "name": "fire",
+    "moving": true,
+    "count": 1,
+    "estimate": 191.08,
+    "actual": 221.12,
+    "waves": 0
+  },
+  {
+    "name": "lightning",
+    "moving": true,
+    "count": 1,
+    "estimate": 251.37,
+    "actual": 244.17,
+    "waves": 0
+  },
+  {
+    "name": "energy3",
+    "moving": true,
+    "count": 1,
+    "estimate": 278.18,
+    "actual": 271.08,
+    "waves": 42
+  },
+  {
+    "name": "energy",
+    "moving": true,
+    "count": 10,
+    "estimate": 270.62,
+    "actual": 2654.25,
+    "waves": 30
+  },
+  {
+    "name": "fire",
+    "moving": true,
+    "count": 10,
+    "estimate": 191.08,
+    "actual": 2222.95,
+    "waves": 0
+  },
+  {
+    "name": "lightning",
+    "moving": true,
+    "count": 10,
+    "estimate": 251.37,
+    "actual": 2445.97,
+    "waves": 0
+  },
+  {
+    "name": "energy3",
+    "moving": true,
+    "count": 10,
+    "estimate": 278.18,
+    "actual": 2502,
+    "waves": 42
+  }
+]

@@ -1,0 +1,170 @@
+{
+  "pass": 83,
+  "checks": [
+    "HP formula 1",
+    "fixed growth 1",
+    "HP formula 10",
+    "fixed growth 10",
+    "HP formula 20",
+    "fixed growth 20",
+    "HP formula 30",
+    "fixed growth 30",
+    "HP formula 40",
+    "fixed growth 40",
+    "HP formula 50",
+    "fixed growth 50",
+    "HP formula 60",
+    "fixed growth 60",
+    "HP formula 70",
+    "fixed growth 70",
+    "HP formula 80",
+    "fixed growth 80",
+    "HP formula 87",
+    "fixed growth 87",
+    "HP formula 90",
+    "fixed growth 90",
+    "HP formula 94",
+    "fixed growth 94",
+    "HP formula 95",
+    "fixed growth 95",
+    "HP formula 100",
+    "fixed growth 100",
+    "HP formula 120",
+    "fixed growth 120",
+    "HP formula 1000",
+    "fixed growth 1000",
+    "stage87 anchor",
+    "independent boss unchanged 1",
+    "gold unchanged 1",
+    "enemy attack unchanged 1",
+    "independent boss unchanged 30",
+    "gold unchanged 30",
+    "enemy attack unchanged 30",
+    "independent boss unchanged 87",
+    "gold unchanged 87",
+    "enemy attack unchanged 87",
+    "independent boss unchanged 95",
+    "gold unchanged 95",
+    "enemy attack unchanged 95",
+    "independent boss unchanged 120",
+    "gold unchanged 120",
+    "enemy attack unchanged 120",
+    "burn stage1",
+    "burn stage2",
+    "burn stage3",
+    "burn capped3",
+    "burn uses current multiplier once",
+    "burn expires",
+    "expired burn resets",
+    "refresh does not stack",
+    "strongest base not summed",
+    "spread preserves intensity",
+    "spread no double multiplier",
+    "no recursive spread",
+    "ifrit duration80percent lv10",
+    "first volley1",
+    "first tornado adds once",
+    "second volley2",
+    "overlapping tornados stack burn",
+    "third volley3",
+    "overlap direct damage equals one continuous tornado, not six",
+    "guardian first split",
+    "guardian second split",
+    "guardian preserves nova total",
+    "guardian three hits freeze via passive",
+    "guardian first radius",
+    "guardian final radius",
+    "guardian no unconditional freeze",
+    "unequip reequip cancels old summon",
+    "no cross stage summon damage",
+    "menu pauses summons",
+    "respec cancels summons",
+    "revive clears summons",
+    "save skill levels retained",
+    "save slots cooldown retained",
+    "save progress economy retained",
+    "canvas render both summons"
+  ],
+  "hpRows": [
+    {
+      "stage": 1,
+      "hp": 60,
+      "display": "60"
+    },
+    {
+      "stage": 10,
+      "hp": 440.9330791556668,
+      "display": "441"
+    },
+    {
+      "stage": 20,
+      "hp": 4044.277410050145,
+      "display": "4.04K"
+    },
+    {
+      "stage": 30,
+      "hp": 37094.47202455757,
+      "display": "37.09K"
+    },
+    {
+      "stage": 40,
+      "hp": 340233.7958719858,
+      "display": "340.23K"
+    },
+    {
+      "stage": 50,
+      "hp": 3120654.6295314403,
+      "display": "3.12M"
+    },
+    {
+      "stage": 60,
+      "hp": 28622921.75254733,
+      "display": "28.62M"
+    },
+    {
+      "stage": 70,
+      "hp": 262531983.48176682,
+      "display": "262.53M"
+    },
+    {
+      "stage": 80,
+      "hp": 2407966696.9965005,
+      "display": "2.41B"
+    },
+    {
+      "stage": 87,
+      "hp": 11359998020.21406,
+      "display": "11.36B"
+    },
+    {
+      "stage": 90,
+      "hp": 22086084662.697624,
+      "display": "22.09B"
+    },
+    {
+      "stage": 94,
+      "hp": 53592749094.17691,
+      "display": "53.59B"
+    },
+    {
+      "stage": 95,
+      "hp": 66888716237.73635,
+      "display": "66.89B"
+    },
+    {
+      "stage": 100,
+      "hp": 202575532434.18307,
+      "display": "202.58B"
+    },
+    {
+      "stage": 120,
+      "hp": 17042115404743.238,
+      "display": "17.04T"
+    },
+    {
+      "stage": 1000,
+      "hp": 8.486528378323978e+97,
+      "display": "8.49e+97"
+    }
+  ]
+}

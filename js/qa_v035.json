@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "default selection, stats, save, canvas",
+    "blonde selection, stats, save, canvas",
+    "elder selection, stats, save, canvas",
+    "elf selection, stats, save, canvas",
+    "demon selection, stats, save, canvas"
+  ],
+  "notes": "Mobile touch not tested"
+}

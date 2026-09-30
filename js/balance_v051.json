@@ -1,0 +1,194 @@
+[
+  {
+    "name": "energy",
+    "moving": false,
+    "count": 1,
+    "estimate": 270.62,
+    "actual": 263.47,
+    "waves": 29
+  },
+  {
+    "name": "fire",
+    "moving": false,
+    "count": 1,
+    "estimate": 212.74,
+    "actual": 278.92,
+    "waves": 0
+  },
+  {
+    "name": "lightning",
+    "moving": false,
+    "count": 1,
+    "estimate": 251.37,
+    "actual": 244.7,
+    "waves": 0
+  },
+  {
+    "name": "energy3",
+    "moving": false,
+    "count": 1,
+    "estimate": 278.18,
+    "actual": 271.08,
+    "waves": 42
+  },
+  {
+    "name": "fire3",
+    "moving": false,
+    "count": 1,
+    "estimate": 182.91,
+    "actual": 247.41,
+    "waves": 0
+  },
+  {
+    "name": "ice3",
+    "moving": false,
+    "count": 1,
+    "estimate": 122.52,
+    "actual": 133.53,
+    "waves": 0
+  },
+  {
+    "name": "energy",
+    "moving": false,
+    "count": 10,
+    "estimate": 270.62,
+    "actual": 2655.3,
+    "waves": 30
+  },
+  {
+    "name": "fire",
+    "moving": false,
+    "count": 10,
+    "estimate": 212.74,
+    "actual": 2789.2,
+    "waves": 0
+  },
+  {
+    "name": "lightning",
+    "moving": false,
+    "count": 10,
+    "estimate": 251.37,
+    "actual": 2447.02,
+    "waves": 0
+  },
+  {
+    "name": "energy3",
+    "moving": false,
+    "count": 10,
+    "estimate": 278.18,
+    "actual": 2502,
+    "waves": 42
+  },
+  {
+    "name": "fire3",
+    "moving": false,
+    "count": 10,
+    "estimate": 182.91,
+    "actual": 2474.07,
+    "waves": 0
+  },
+  {
+    "name": "ice3",
+    "moving": false,
+    "count": 10,
+    "estimate": 122.52,
+    "actual": 1300.82,
+    "waves": 0
+  },
+  {
+    "name": "energy",
+    "moving": true,
+    "count": 1,
+    "estimate": 270.62,
+    "actual": 265,
+    "waves": 30
+  },
+  {
+    "name": "fire",
+    "moving": true,
+    "count": 1,
+    "estimate": 212.74,
+    "actual": 278.39,
+    "waves": 0
+  },
+  {
+    "name": "lightning",
+    "moving": true,
+    "count": 1,
+    "estimate": 251.37,
+    "actual": 244.17,
+    "waves": 0
+  },
+  {
+    "name": "energy3",
+    "moving": true,
+    "count": 1,
+    "estimate": 278.18,
+    "actual": 271.08,
+    "waves": 42
+  },
+  {
+    "name": "fire3",
+    "moving": true,
+    "count": 1,
+    "estimate": 182.91,
+    "actual": 245.06,
+    "waves": 0
+  },
+  {
+    "name": "ice3",
+    "moving": true,
+    "count": 1,
+    "estimate": 122.52,
+    "actual": 133.53,
+    "waves": 0
+  },
+  {
+    "name": "energy",
+    "moving": true,
+    "count": 10,
+    "estimate": 270.62,
+    "actual": 2613.65,
+    "waves": 28
+  },
+  {
+    "name": "fire",
+    "moving": true,
+    "count": 10,
+    "estimate": 212.74,
+    "actual": 2788.82,
+    "waves": 0
+  },
+  {
+    "name": "lightning",
+    "moving": true,
+    "count": 10,
+    "estimate": 251.37,
+    "actual": 2446.5,
+    "waves": 0
+  },
+  {
+    "name": "energy3",
+    "moving": true,
+    "count": 10,
+    "estimate": 278.18,
+    "actual": 2502,
+    "waves": 42
+  },
+  {
+    "name": "fire3",
+    "moving": true,
+    "count": 10,
+    "estimate": 182.91,
+    "actual": 2454.12,
+    "waves": 0
+  },
+  {
+    "name": "ice3",
+    "moving": true,
+    "count": 10,
+    "estimate": 122.52,
+    "actual": 1327.48,
+    "waves": 0
+  }
+]

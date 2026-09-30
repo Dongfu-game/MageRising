@@ -1,0 +1,24 @@
+{
+  "pass": 18,
+  "checks": [
+    "tier1 timing preserved",
+    "tier2 renamed without changing id",
+    "chain targets level 1",
+    "chain targets level 10",
+    "full residence total chainLightning 1",
+    "full residence total chainLightning 10",
+    "full residence total thunderstorm 1",
+    "full residence total thunderstorm 10",
+    "orb three primary targets per pulse",
+    "orb slower than arcane 1100",
+    "storm outside area safe",
+    "storm entering area hit",
+    "skill reset cancels orb",
+    "storm stage guard",
+    "orb shock and paralysis",
+    "orb passive extra jump",
+    "normal and low FX render chainLightning",
+    "normal and low FX render thunderstorm"
+  ],
+  "notes": "Logic and Canvas validation; actual mobile UI not tested"
+}

@@ -1,0 +1,71 @@
+[
+  {
+    "w": 390,
+    "overflow": false,
+    "readings": [
+      {
+        "text": "실제 DPS 221.36K",
+        "clipped": false
+      },
+      {
+        "text": "실제 DPS 4.08M",
+        "clipped": false
+      },
+      {
+        "text": "실제 DPS 4.90M",
+        "clipped": false
+      }
+    ],
+    "beam": true,
+    "popup": true,
+    "reset": true,
+    "slotMenu": true,
+    "errors": []
+  },
+  {
+    "w": 690,
+    "overflow": false,
+    "readings": [
+      {
+        "text": "실제 DPS 221.36K",
+        "clipped": false
+      },
+      {
+        "text": "실제 DPS 4.08M",
+        "clipped": false
+      },
+      {
+        "text": "실제 DPS 4.90M",
+        "clipped": false
+      }
+    ],
+    "beam": true,
+    "popup": true,
+    "reset": true,
+    "slotMenu": true,
+    "errors": []
+  },
+  {
+    "w": 320,
+    "overflow": false,
+    "readings": [
+      {
+        "text": "실제 DPS 221.36K",
+        "clipped": false
+      },
+      {
+        "text": "실제 DPS 4.08M",
+        "clipped": false
+      },
+      {
+        "text": "실제 DPS 4.90M",
+        "clipped": false
+      }
+    ],
+    "beam": true,
+    "popup": true,
+    "reset": true,
+    "slotMenu": true,
+    "errors": []
+  }
+]
