@@ -153,11 +153,26 @@ button{transition:background .15s,transform .1s,filter .15s}
 
 @media(prefers-reduced-motion:reduce){#splash,#splash *,.brand-sigil,#buyPower,.gacha-strip.ready,.active-slot::after,.tabs .badge,.banner.show,.pop,.menu-screen,.app>main,.modal-card{animation:none!important}#splash{display:none}}
 
+/* ===== v0.5.4 ranking + nickname ===== */
+.icon-btn.dot{position:relative}.icon-btn.dot::after{content:'';position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#ff6f93;box-shadow:0 0 6px #ff6f93}
+.rk-me{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border:1px solid #544764;border-radius:12px;background:#1b1d30;margin:4px 0 12px}
+.rk-me span{font-size:11px;color:var(--muted)}.rk-me b{display:block;font-size:15px;color:#eadcff;margin-top:3px;overflow-wrap:anywhere}
+.modal-card .rk-me .subtle{margin:0}
+.rk-list{display:grid;gap:6px;margin:0 0 6px}
+.rk-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px 10px;border:1px solid #2f3048;border-radius:10px;background:#171b2b}
+.rk-row.me{border-color:#a98bff;background:#2a2342;box-shadow:0 0 14px #a98bff33}
+.rk-pos{text-align:center;font-weight:800;font-size:14px;color:#bdb7d3}.rk-row:nth-child(-n+3) .rk-pos{font-size:20px}
+.rk-nick{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk-score{text-align:right;font-size:11px;color:var(--muted);line-height:1.5}.rk-score b{color:var(--gold);font-size:13px;font-weight:700}
+.rk-input{width:100%;background:#12141f;color:var(--text);border:1px solid #665278;border-radius:10px;padding:13px;font:inherit;font-size:16px;margin:6px 0 4px}
+.rk-err{min-height:18px;margin:4px 0 6px;font-size:11px;color:#ff969e}
+.rk-state{text-align:center;color:var(--muted);font-size:12px;line-height:1.9;padding:26px 8px}
+
 </style></head>
 <body>
 <div aria-hidden="true" id="splash"><div class="splash-sigil">✧</div><small>MAGE RISING</small><h1>마법사의 여정</h1><div class="splash-bar"><i></i></div></div>
 <div class="app">
-<header class="header"><div class="brand"><span class="brand-sigil">✧</span><div><small>MAGE RISING</small><h1>마법사의 여정</h1></div></div><div class="header-actions"><button aria-label="소리 켜기" class="icon-btn" id="soundBtn">♪</button><button aria-label="일시정지" class="icon-btn" id="pauseBtn">Ⅱ</button><button aria-label="설정" class="icon-btn" id="settingsBtn">⚙</button></div></header>
+<header class="header"><div class="brand"><span class="brand-sigil">✧</span><div><small>MAGE RISING</small><h1>마법사의 여정</h1></div></div><div class="header-actions"><button aria-label="소리 켜기" class="icon-btn" id="soundBtn">♪</button><button aria-label="일시정지" class="icon-btn" id="pauseBtn">Ⅱ</button><button aria-label="랭킹" class="icon-btn" id="rankBtn">🏆</button><button aria-label="설정" class="icon-btn" id="settingsBtn">⚙</button></div></header>
 <main>
 <section class="battle-card">
 <div class="battle-top"><div><span class="eyebrow" id="biomeName">달빛 숲</span><div class="stage">STAGE <strong id="stageNum">01</strong></div></div><div class="wallet"><span>보유 골드</span><strong><i>◈</i> <b id="goldNum">120</b></strong></div></div>
@@ -168,7 +183,7 @@ button{transition:background .15s,transform .1s,filter .15s}
 <div aria-label="전투 액티브 슬롯" class="active-slots" id="activeSlots"></div>
 <div class="gacha-strip"><button class="subtle" id="gachaBtn">🎁 무료 뽑기 · 60초</button><span id="gachaProgress"></span></div>
 <section class="panel" id="magicPanel"><div class="panel-heading"><div><h2>마력 강화 <span id="powerLevel"></span></h2></div><div aria-label="구매 수량" class="bulk"><button class="active" data-bulk="1">×1</button><button data-bulk="10">×10</button><button data-bulk="max">최대</button></div></div><div class="power-card"><strong hidden="" id="powerValue"></strong><p hidden="" id="powerDetail"></p><button aria-label="마력 강화 구매" class="primary" id="buyPower">강화</button></div></section>
-</main><section aria-label="게임 메뉴 화면" class="menu-screen" hidden="" id="menuScreen"><div class="menu-top"><div><strong id="menuTitle">스킬</strong><small>전투 일시정지 · 닫으면 이어서 진행</small></div><button aria-label="메뉴 닫고 전투로" class="subtle" id="menuClose">전투로 ✕</button></div><div class="menu-scroll" id="menuScroll"><section class="panel" hidden="" id="equipmentPanel"><div class="panel-heading"><div><small>GEAR &amp; RELICS</small><h2>여정의 전리품</h2></div><div class="recommend-controls"><select aria-label="장비 추천 기준" id="recommendMode"><option value="balanced">균형</option><option value="attack">공격</option><option value="survival">생존</option></select><button class="subtle" id="equipBestBtn">추천 장비 착용</button></div></div><div class="equipment-grid" id="equipmentSlots"></div><p class="hint left">장비칸을 누르면 해당 부위만 표시합니다. 보관함의 비교 버튼으로 교체 효과를 확인하세요.</p><div class="unique-box"><div><small>✦ UNIQUE RELIC</small><h3>유니크 상자 <b id="uniqueCount">0개</b></h3><p id="uniqueNext">10스테이지마다 최초 보스 처치 보상</p></div><button class="primary" id="openUniqueBtn">상자 열기</button></div><div class="full-set-rewards" id="fullSetRewards"></div><div class="gear-summary" id="gearSummary"></div><div class="hint left" id="setOverview"></div><button class="subtle" id="claimDropBtn">보관된 드롭 수령</button><div class="inventory-heading"><h3>보관함 <span id="inventoryCount"></span></h3><button class="subtle" id="forgeBtn">자동 합성</button></div><label class="inventory-sort">보기 <select id="inventoryFilter" aria-label="장비 부위 필터"><option value="-1">전체 부위</option><option value="0">지팡이</option><option value="1">망토</option><option value="2">반지</option><option value="3">목걸이</option><option value="4">장갑</option><option value="5">부츠</option><option value="6">투구</option></select><select aria-label="인벤토리 정렬" id="inventorySort"><option value="newest">최신순</option><option value="rarity">등급순</option><option value="slot">부위순</option><option value="set">세트순</option></select></label><p class="hint left">장비 3개 또는 2개＋동급 조각 1개로 합성 · 착용 장비 제외 · 유니크·세트는 같은 부위끼리 흡수 강화<br/>합성 성공률: 일반 90% · 고급 70% · 희귀 50%<br/>일반 드롭: 일반 55% · 고급 30% · 희귀 14% · 유니크급 1%<br/>모든 유니크급 보상: 유니크 70% / 세트 30% · 세트 5종 균등</p><p class="hint left" id="fragmentSummary"></p><div class="inventory" id="inventory"></div></section><section class="panel" hidden="" id="grimoirePanel"><div class="panel-heading"><div><small>FOUR ELEMENTS &amp; TRANSCENDENCE</small><h2>스킬트리 <small id="treeSP"></small></h2></div><button class="subtle" id="resetSkillsBtn">스킬 초기화 · 무료</button></div><p class="hint left"><b id="spCount"></b> · <span id="spSpent"></span></p><p class="hint left">액티브 3슬롯 · 기본 280 + 초월 100 SP · 첫 Energy Bolt 1 SP 기본 지급</p><div class="spell-list" id="spellList"></div></section><section class="panel" hidden="" id="characterPanel"><div class="panel-heading"><div><small>CHARACTER STATUS</small><h2>캐릭터 정보</h2></div></div><section class="skin-section"><div class="skin-heading"><h3>외형 변경</h3><span>5종 무료 · 능력치 동일</span></div><div class="skin-gallery" id="skinGallery"></div><p class="hint left">외형은 스킬 계열과 자유롭게 조합할 수 있습니다. 이미지를 불러오지 못하면 기본 마법사로 표시됩니다.</p></section><div class="character-stats" id="characterStats"></div><p class="hint left" id="migrationInfo"></p><p class="hint left">기준 DPS는 장착 스킬의 직접 피해와 장판 전체 지속피해를 합산한 추정치입니다. 적이 범위 안에 끝까지 머무는 기준입니다. 룬 상시 공격과 과충전 예상 빈도는 포함합니다. 내성·화상·파쇄·공명·관통·동시 파동 병합·순환 지연은 포함하지 않습니다.<br/>이동속도는 전진 연출과 적 무리 조우 간격에 적용됩니다.</p></section></div></section><nav aria-label="게임 메뉴" class="tabs"><button class="active" data-tab="magic">⚔ 전투</button><button data-tab="grimoire">✦ 스킬</button><button data-tab="equipment">♜ 인벤토리 <span class="badge" hidden="" id="newItems">0</span></button><button data-tab="character">▤ 캐릭터</button></nav><footer><span>v0.5.3 · 자동 저장</span><button id="helpBtn">플레이 안내</button><span id="saveStatus">저장 준비</span></footer></div>
+</main><section aria-label="게임 메뉴 화면" class="menu-screen" hidden="" id="menuScreen"><div class="menu-top"><div><strong id="menuTitle">스킬</strong><small>전투 일시정지 · 닫으면 이어서 진행</small></div><button aria-label="메뉴 닫고 전투로" class="subtle" id="menuClose">전투로 ✕</button></div><div class="menu-scroll" id="menuScroll"><section class="panel" hidden="" id="equipmentPanel"><div class="panel-heading"><div><small>GEAR &amp; RELICS</small><h2>여정의 전리품</h2></div><div class="recommend-controls"><select aria-label="장비 추천 기준" id="recommendMode"><option value="balanced">균형</option><option value="attack">공격</option><option value="survival">생존</option></select><button class="subtle" id="equipBestBtn">추천 장비 착용</button></div></div><div class="equipment-grid" id="equipmentSlots"></div><p class="hint left">장비칸을 누르면 해당 부위만 표시합니다. 보관함의 비교 버튼으로 교체 효과를 확인하세요.</p><div class="unique-box"><div><small>✦ UNIQUE RELIC</small><h3>유니크 상자 <b id="uniqueCount">0개</b></h3><p id="uniqueNext">10스테이지마다 최초 보스 처치 보상</p></div><button class="primary" id="openUniqueBtn">상자 열기</button></div><div class="full-set-rewards" id="fullSetRewards"></div><div class="gear-summary" id="gearSummary"></div><div class="hint left" id="setOverview"></div><button class="subtle" id="claimDropBtn">보관된 드롭 수령</button><div class="inventory-heading"><h3>보관함 <span id="inventoryCount"></span></h3><button class="subtle" id="forgeBtn">자동 합성</button></div><label class="inventory-sort">보기 <select id="inventoryFilter" aria-label="장비 부위 필터"><option value="-1">전체 부위</option><option value="0">지팡이</option><option value="1">망토</option><option value="2">반지</option><option value="3">목걸이</option><option value="4">장갑</option><option value="5">부츠</option><option value="6">투구</option></select><select aria-label="인벤토리 정렬" id="inventorySort"><option value="newest">최신순</option><option value="rarity">등급순</option><option value="slot">부위순</option><option value="set">세트순</option></select></label><p class="hint left">장비 3개 또는 2개＋동급 조각 1개로 합성 · 착용 장비 제외 · 유니크·세트는 같은 부위끼리 흡수 강화<br/>합성 성공률: 일반 90% · 고급 70% · 희귀 50%<br/>일반 드롭: 일반 55% · 고급 30% · 희귀 14% · 유니크급 1%<br/>모든 유니크급 보상: 유니크 70% / 세트 30% · 세트 5종 균등</p><p class="hint left" id="fragmentSummary"></p><div class="inventory" id="inventory"></div></section><section class="panel" hidden="" id="grimoirePanel"><div class="panel-heading"><div><small>FOUR ELEMENTS &amp; TRANSCENDENCE</small><h2>스킬트리 <small id="treeSP"></small></h2></div><button class="subtle" id="resetSkillsBtn">스킬 초기화 · 무료</button></div><p class="hint left"><b id="spCount"></b> · <span id="spSpent"></span></p><p class="hint left">액티브 3슬롯 · 기본 280 + 초월 100 SP · 첫 Energy Bolt 1 SP 기본 지급</p><div class="spell-list" id="spellList"></div></section><section class="panel" hidden="" id="characterPanel"><div class="panel-heading"><div><small>CHARACTER STATUS</small><h2>캐릭터 정보</h2></div></div><section class="skin-section"><div class="skin-heading"><h3>외형 변경</h3><span>5종 무료 · 능력치 동일</span></div><div class="skin-gallery" id="skinGallery"></div><p class="hint left">외형은 스킬 계열과 자유롭게 조합할 수 있습니다. 이미지를 불러오지 못하면 기본 마법사로 표시됩니다.</p></section><div class="character-stats" id="characterStats"></div><p class="hint left" id="migrationInfo"></p><p class="hint left">기준 DPS는 장착 스킬의 직접 피해와 장판 전체 지속피해를 합산한 추정치입니다. 적이 범위 안에 끝까지 머무는 기준입니다. 룬 상시 공격과 과충전 예상 빈도는 포함합니다. 내성·화상·파쇄·공명·관통·동시 파동 병합·순환 지연은 포함하지 않습니다.<br/>이동속도는 전진 연출과 적 무리 조우 간격에 적용됩니다.</p></section></div></section><nav aria-label="게임 메뉴" class="tabs"><button class="active" data-tab="magic">⚔ 전투</button><button data-tab="grimoire">✦ 스킬</button><button data-tab="equipment">♜ 인벤토리 <span class="badge" hidden="" id="newItems">0</span></button><button data-tab="character">▤ 캐릭터</button></nav><footer><span>v0.5.4 · 자동 저장</span><button id="helpBtn">플레이 안내</button><span id="saveStatus">저장 준비</span></footer></div>
 <div class="toast" id="toast" role="status"></div>
 <div class="modal" hidden="" id="modal"><div aria-labelledby="modalTitle" aria-modal="true" class="modal-card" role="dialog"><button aria-label="닫기" class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
@@ -1160,6 +1175,175 @@ if(/^https?:$/.test(location.protocol)){
 /* Remove splash from the DOM once its CSS fade has finished. */
 setTimeout(()=>{const s=$('splash');if(s)s.remove();},1900);
 })();
+
+</script><script>
+/* Firebase 웹앱 설정값. FIREBASE_SETUP.md 순서대로 만든 뒤 아래 4개를 채우세요.
+   (Firebase 웹 설정값은 비밀키가 아니라 공개돼도 괜찮아요. 보안은 Firestore 규칙이 담당합니다.)
+   비워두면 랭킹 서버 없이 닉네임만 기기에 저장됩니다. */
+window.MAGE_FIREBASE = {
+  apiKey: '',
+  authDomain: '',
+  projectId: '',
+  appId: ''
+};
+
+</script><script>
+/* v0.5.4 닉네임 + 랭킹. 게임 상태는 읽기만 하고(저장 데이터에서), 절대 수정하지 않습니다.
+   랭킹 기준: 최고 스테이지 → 같으면 마력 레벨. */
+(function(root){
+'use strict';
+const NICK_RE=/^[가-힣A-Za-z0-9_ ]{2,12}$/;
+const SAVE_KEY='mage-rising-v01',NICK_KEY='mage-rising-nick';
+const SDK='https://www.gstatic.com/firebasejs/10.14.1/';
+const MAX_STAGE=1000,MAX_POWER=99999,TOP_N=50;
+
+const pure={
+  cleanNick(s){return String(s==null?'':s).normalize('NFC').replace(/\s+/g,' ').trim();},
+  validNick(s){return NICK_RE.test(s);},
+  clamp(v,lo,hi){v=Math.floor(Number(v));if(!Number.isFinite(v))v=lo;return Math.max(lo,Math.min(hi,v));},
+  score(best,power){return best*100000+Math.min(power,MAX_POWER);},
+  merge(remote,local){
+    if(!remote||!Number.isFinite(remote.best))return {best:local.best,power:local.power};
+    if(local.best>remote.best)return {best:local.best,power:local.power};
+    if(local.best===remote.best)return {best:remote.best,power:Math.max(remote.power|0,local.power)};
+    return {best:remote.best,power:remote.power|0};
+  }
+};
+if(typeof module!=='undefined'&&module.exports)module.exports=pure;
+if(typeof document==='undefined')return;
+
+const $=id=>document.getElementById(id);
+const cfg=root.MAGE_FIREBASE||{};
+const configured=!!(cfg.apiKey&&cfg.projectId);
+let loading=null,lastSent=null,view=0;
+
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function getNick(){try{return localStorage.getItem(NICK_KEY)||'';}catch(e){return '';}}
+function setNick(n){try{localStorage.setItem(NICK_KEY,n);}catch(e){}}
+function readLocal(){
+  let s={};try{s=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}')||{};}catch(e){}
+  return {best:pure.clamp(s.best||1,1,MAX_STAGE),power:pure.clamp(s.powerLevel||0,0,MAX_POWER)};
+}
+function toastMsg(t){const el=$('toast');if(!el)return;el.textContent=t;el.classList.add('show');clearTimeout(toastMsg.t);toastMsg.t=setTimeout(()=>el.classList.remove('show'),3000);}
+function blocked(){const b=$('battleState');return !!b&&b.textContent.trim()==='부활 대기';}
+function sheet(html){$('modalContent').innerHTML=html;$('modal').hidden=false;$('modalClose').hidden=false;}
+function refreshDot(){const b=$('rankBtn');if(b)b.classList.toggle('dot',!getNick());}
+
+/* ---------- Firebase (SDK는 랭킹을 처음 쓸 때만 내려받음) ---------- */
+function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>no(new Error('load '+src));document.head.appendChild(s);});}
+function init(){
+  if(!configured)return Promise.reject(new Error('not-configured'));
+  if(loading)return loading;
+  loading=(async()=>{
+    if(!root.firebase){
+      await loadScript(SDK+'firebase-app-compat.js');
+      await Promise.all([loadScript(SDK+'firebase-auth-compat.js'),loadScript(SDK+'firebase-firestore-compat.js')]);
+    }
+    const fb=root.firebase;
+    if(!fb.apps.length)fb.initializeApp(cfg);
+    const auth=fb.auth();
+    let user=await new Promise(r=>{const off=auth.onAuthStateChanged(u=>{off();r(u);});});
+    if(!user)user=(await auth.signInAnonymously()).user;
+    return {fb,db:fb.firestore(),uid:user.uid};
+  })();
+  loading.catch(()=>{loading=null;});
+  return loading;
+}
+
+/* mode: 'force' 즉시 | 'flush' 변경분이 있으면 즉시 | 없음: 쓰기 횟수 절약용 대기 적용 */
+async function sync(mode){
+  const nick=getNick();if(!configured||!nick)return false;
+  const local=readLocal(),now=Date.now();
+  if(mode!=='force'){
+    if(lastSent&&lastSent.best===local.best&&lastSent.power===local.power&&lastSent.nick===nick)return false;
+    if(mode!=='flush'&&lastSent){const wait=local.best>lastSent.best?20000:300000;if(now-lastSent.t<wait)return false;}
+  }
+  const {fb,db,uid}=await init();
+  const ref=db.collection('ranks').doc(uid),snap=await ref.get();
+  const m=pure.merge(snap.exists?snap.data():null,local);
+  await ref.set({nick,best:m.best,power:m.power,score:pure.score(m.best,m.power),updatedAt:fb.firestore.FieldValue.serverTimestamp()});
+  lastSent={best:local.best,power:local.power,nick,t:now};
+  return true;
+}
+async function fetchTop(){
+  const {db,uid}=await init();
+  const s=await db.collection('ranks').orderBy('score','desc').limit(TOP_N).get();
+  return {uid,rows:s.docs.map(d=>Object.assign({id:d.id},d.data()))};
+}
+
+/* ---------- 화면 ---------- */
+function showNick(){
+  const cur=getNick();
+  sheet('<div class="eyebrow">PROFILE</div><h2 id="modalTitle">닉네임 설정</h2><p class="lead">랭킹에 표시될 이름이에요.<br>한글·영문·숫자·밑줄(_) 2~12자</p><input id="rkInput" class="rk-input" maxlength="12" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="닉네임" value="'+esc(cur)+'"><p class="rk-err" id="rkErr"></p><button class="primary" id="rkSave">저장</button>'+(cur?'<button class="subtle" id="rkBack">취소</button>':''));
+  const input=$('rkInput');
+  const save=async()=>{
+    const n=pure.cleanNick(input.value);
+    if(!pure.validNick(n)){$('rkErr').textContent='한글·영문·숫자·_ 만 쓸 수 있고 2~12자여야 해요.';return;}
+    setNick(n);refreshDot();
+    $('rkSave').disabled=true;
+    showRank(true);
+  };
+  $('rkSave').onclick=save;
+  input.onkeydown=e=>{if(e.key==='Enter')save();};
+  if($('rkBack'))$('rkBack').onclick=()=>showRank();
+  setTimeout(()=>input.focus(),60);
+}
+
+function head(nick){return '<div class="eyebrow">HALL OF FAME</div><h2 id="modalTitle">🏆 랭킹</h2><div class="rk-me"><div><span>내 닉네임</span><b>'+esc(nick)+'</b></div><button class="subtle" id="rkNick">변경</button></div>';}
+function bind(){if($('rkNick'))$('rkNick').onclick=showNick;if($('rkRetry'))$('rkRetry').onclick=()=>showRank();}
+
+async function showRank(force){
+  if(blocked()){toastMsg('부활한 뒤에 열 수 있어요.');return;}
+  const nick=getNick();
+  if(!nick){showNick();return;}
+  const my=++view;
+  if(!configured){
+    sheet(head(nick)+'<p class="rk-state">랭킹 서버를 준비 중이에요.<br>닉네임은 이 기기에 저장됐어요.</p>');bind();
+    try{console.warn('[랭킹] js/firebase-config.js 에 Firebase 설정값을 입력하세요.');}catch(e){}
+    return;
+  }
+  sheet(head(nick)+'<p class="rk-state">랭킹 불러오는 중…</p>');bind();
+  try{
+    await sync(force?'force':'flush');
+    const {uid,rows}=await fetchTop();
+    if(my!==view||$('modal').hidden)return;
+    const local=readLocal();
+    const list=rows.length?rows.map((r,i)=>{
+      const medal=['🥇','🥈','🥉'][i]||(i+1);
+      return '<div class="rk-row'+(r.id===uid?' me':'')+'"><div class="rk-pos">'+medal+'</div><div class="rk-nick">'+esc(r.nick||'???')+'</div><div class="rk-score"><b>STAGE '+esc(r.best)+'</b><br>Lv.'+esc(r.power)+'</div></div>';
+    }).join(''):'<p class="rk-state">아직 등록된 기록이 없어요.<br>첫 번째 랭커가 되어 보세요!</p>';
+    const mine=rows.findIndex(r=>r.id===uid);
+    const foot=mine>=0?'<p class="hint left">내 순위 <b>'+(mine+1)+'위</b> · 상위 '+TOP_N+'명까지 표시돼요.</p>':'<p class="hint left">내 기록 STAGE '+local.best+' · Lv.'+local.power+' (상위 '+TOP_N+'명 밖)</p>';
+    sheet(head(nick)+'<div class="rk-list">'+list+'</div>'+foot+'<button class="subtle" id="rkRetry">새로고침</button>');bind();
+  }catch(e){
+    if(my!==view||$('modal').hidden)return;
+    try{console.warn('[랭킹]',e);}catch(_){}
+    sheet(head(nick)+'<p class="rk-state">랭킹을 불러오지 못했어요.<br>인터넷 연결을 확인해 주세요.</p><button class="subtle" id="rkRetry">다시 시도</button>');bind();
+  }
+}
+
+/* ---------- 연결 ---------- */
+refreshDot();
+if($('rankBtn'))$('rankBtn').onclick=()=>showRank();
+if($('modalClose'))$('modalClose').addEventListener('click',()=>{view++;});
+
+/* 기록 자동 전송: 30초마다 확인 (변경 없으면 아무것도 안 함), 앱을 닫을 때 한 번 더 */
+if(configured){
+  setInterval(()=>{sync().catch(()=>{});},30000);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)sync('flush').catch(()=>{});});
+}
+
+/* 닉네임이 없으면 3스테이지 도달 시 한 번만 안내 */
+let nudged=false;try{nudged=!!localStorage.getItem('mage-rising-nudge');}catch(e){}
+const st=$('stageNum');
+if(st&&!nudged)new MutationObserver(()=>{
+  if(nudged||getNick()||(parseInt(st.textContent,10)||0)<3)return;
+  nudged=true;try{localStorage.setItem('mage-rising-nudge','1');}catch(e){}
+  toastMsg('🏆 랭킹에 도전해 보세요! 우측 상단에서 닉네임을 정할 수 있어요.');
+}).observe(st,{childList:true,characterData:true,subtree:true});
+
+root.MageRank={sync,showRank,configured};
+})(typeof window!=='undefined'?window:globalThis);
 
 </script>
 </body></html>

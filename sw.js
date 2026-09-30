@@ -1,6 +1,6 @@
 /* Mage Rising offline cache. Stale-while-revalidate: opens instantly, updates itself for next launch. */
-const CACHE='mage-rising-v0.5.3';
-const CORE=['./','index.html','style.css','js/config.js','js/items.js','js/skills.js','js/game.js','js/polish.js','manifest.webmanifest','assets/icons/icon-192.png'];
+const CACHE='mage-rising-v0.5.4';
+const CORE=['./','index.html','style.css','js/config.js','js/items.js','js/skills.js','js/game.js','js/polish.js','js/firebase-config.js','js/rank.js','manifest.webmanifest','assets/icons/icon-192.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==CACHE).map(n=>caches.delete(n)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{

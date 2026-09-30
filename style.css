@@ -149,3 +149,18 @@ button{transition:background .15s,transform .1s,filter .15s}
 #installBtn{color:#e0cfff!important}
 
 @media(prefers-reduced-motion:reduce){#splash,#splash *,.brand-sigil,#buyPower,.gacha-strip.ready,.active-slot::after,.tabs .badge,.banner.show,.pop,.menu-screen,.app>main,.modal-card{animation:none!important}#splash{display:none}}
+
+/* ===== v0.5.4 ranking + nickname ===== */
+.icon-btn.dot{position:relative}.icon-btn.dot::after{content:'';position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#ff6f93;box-shadow:0 0 6px #ff6f93}
+.rk-me{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border:1px solid #544764;border-radius:12px;background:#1b1d30;margin:4px 0 12px}
+.rk-me span{font-size:11px;color:var(--muted)}.rk-me b{display:block;font-size:15px;color:#eadcff;margin-top:3px;overflow-wrap:anywhere}
+.modal-card .rk-me .subtle{margin:0}
+.rk-list{display:grid;gap:6px;margin:0 0 6px}
+.rk-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px 10px;border:1px solid #2f3048;border-radius:10px;background:#171b2b}
+.rk-row.me{border-color:#a98bff;background:#2a2342;box-shadow:0 0 14px #a98bff33}
+.rk-pos{text-align:center;font-weight:800;font-size:14px;color:#bdb7d3}.rk-row:nth-child(-n+3) .rk-pos{font-size:20px}
+.rk-nick{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk-score{text-align:right;font-size:11px;color:var(--muted);line-height:1.5}.rk-score b{color:var(--gold);font-size:13px;font-weight:700}
+.rk-input{width:100%;background:#12141f;color:var(--text);border:1px solid #665278;border-radius:10px;padding:13px;font:inherit;font-size:16px;margin:6px 0 4px}
+.rk-err{min-height:18px;margin:4px 0 6px;font-size:11px;color:#ff969e}
+.rk-state{text-align:center;color:var(--muted);font-size:12px;line-height:1.9;padding:26px 8px}
