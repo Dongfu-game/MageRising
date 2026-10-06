@@ -1,0 +1,14 @@
+{
+  "passed": 8,
+  "results": [
+    "mage all 5 new previews/select",
+    "warrior all 5 new previews/select",
+    "rogue all 5 new previews/select",
+    "summoner all 5 new previews/select",
+    "no scroll 320",
+    "no scroll 390",
+    "no scroll 690",
+    "START embedded all 7 sheets"
+  ],
+  "errors": []
+}

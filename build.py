@@ -8,20 +8,33 @@ for asset in manifest['assets']:
     data = (root/asset['path']).read_bytes()
     if hashlib.sha256(data).hexdigest() != asset['sha256']:
         raise SystemExit('Asset changed; review/update manifest intentionally: '+asset['path'])
-    embedded[asset['id']] = 'data:image/png;base64,'+base64.b64encode(data).decode('ascii')
+    # Legacy images remain in archive for fallback; START uses remaster sheets.
+    # Avoid embedding obsolete portraits a second time.
 effect_embedded = {}
 for asset in json.loads((root/'assets/effects/manifest.json').read_text())['assets']:
     data=(root/asset['path']).read_bytes()
     assert hashlib.sha256(data).hexdigest()==asset['sha256'], 'Effect source changed'
     effect_embedded[asset['id']]='data:image/png;base64,'+base64.b64encode(data).decode('ascii')
+class_embedded={}
+for asset in json.loads((root/'assets/class-skins/manifest.json').read_text())['assets']:
+    data=(root/asset['path']).read_bytes()
+    assert hashlib.sha256(data).hexdigest()==asset['sha256']
+    class_embedded[asset['id']]='data:image/svg+xml;base64,'+base64.b64encode(data).decode('ascii')
+remaster_embedded={}
+for asset in json.loads((root/'assets/remaster/manifest.json').read_text())['assets']:
+    data=(root/asset['path']).read_bytes()
+    assert hashlib.sha256(data).hexdigest()==asset['sha256']
+    remaster_embedded[asset['id']]='data:image/png;base64,'+base64.b64encode(data).decode('ascii')
 html = (root/'index.html').read_text()
+html = html.replace('<head>','<head><script>window.MAGE_REMASTER_EMBEDDED='+json.dumps(remaster_embedded)+';</script>')
+html = html.replace('<head>','<head><script>window.MAGE_CLASS_SKIN_EMBEDDED='+json.dumps(class_embedded)+';</script>')
 html = html.replace('<head>', '<head><script>window.MAGE_EFFECT_EMBEDDED='+json.dumps(effect_embedded,separators=(',',':'))+';</script>')
 html = re.sub(r'<link[^>]*href="style.css"[^>]*>', lambda _: '<style>\n'+(root/'style.css').read_text()+'\n</style>', html)
 html = html.replace('<script src="js/config.js"></script>', '<script>window.MAGE_SKIN_EMBEDDED='+json.dumps(embedded,separators=(',',':'))+';</script>\n<script src="js/config.js"></script>')
-for name in ['config','items','skills','game','polish','firebase-config','rank']:
+for name in ['class-data','config','items','skills','class-art','remaster','game','polish','firebase-config','rank']:
     html = html.replace('<script src="js/'+name+'.js"></script>','<script>\n'+(root/('js/'+name+'.js')).read_text()+'\n</script>')
 (root/'START.html').write_text(html)
-version='0.5.4'
+version='0.6.8'
 out=root.parent/('MageRising_v'+version+'.zip')
 temporary=out.with_suffix('.zip.tmp')
 with zipfile.ZipFile(temporary,'w',zipfile.ZIP_DEFLATED) as archive:

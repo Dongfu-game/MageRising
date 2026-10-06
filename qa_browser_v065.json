@@ -1,0 +1,14 @@
+{
+  "passed": 8,
+  "checks": [
+    "mage 5 cards load/select/full-body fit",
+    "warrior 5 cards load/select/full-body fit",
+    "rogue 5 cards load/select/full-body fit",
+    "summoner 5 cards load/select/full-body fit",
+    "no overflow 320",
+    "no overflow 390",
+    "no overflow 690",
+    "START standalone portraits"
+  ],
+  "errors": []
+}

@@ -1,0 +1,5 @@
+{
+  "passed": 568,
+  "mageRegression": 59,
+  "scope": "old class/save/hit bounds plus all sprite frames, motions, gallery previews and native canvas rendering"
+}

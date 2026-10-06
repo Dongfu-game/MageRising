@@ -1,0 +1,4 @@
+{
+  "passed": 342,
+  "scope": "shared start range, live projectile travel/piercing/explosion/poison/stage, saves, boar regression, all sprite loads"
+}

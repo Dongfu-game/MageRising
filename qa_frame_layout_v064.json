@@ -1,0 +1,30 @@
+{
+  "warrior": {
+    "frames": 15,
+    "joinedComponents": 0
+  },
+  "rogue-dagger": {
+    "frames": 20,
+    "joinedComponents": 1
+  },
+  "rogue-bow": {
+    "frames": 20,
+    "joinedComponents": 2
+  },
+  "summoner-idle": {
+    "frames": 20,
+    "joinedComponents": 1
+  },
+  "summoner-cast": {
+    "frames": 20,
+    "joinedComponents": 1
+  },
+  "mage": {
+    "frames": 20,
+    "joinedComponents": 0
+  },
+  "enemies": {
+    "frames": 6,
+    "joinedComponents": 0
+  }
+}

@@ -1,0 +1,17 @@
+MageRising v0.6.8 GitHub 업로드 안내
+
+GitHub 업로드용 ZIP은 v0.6.8 실행 파일을 모두 포함합니다.
+압축을 푼 뒤 index.html / style.css / sw.js / manifest.webmanifest는 저장소 루트에,
+js 폴더의 파일은 저장소 js/에, assets 폴더는 assets/에 올리세요.
+폴더 자체를 새 상위 폴더로 중첩시키지 마세요.
+
+중요: js/firebase-config.js는 업로드용 ZIP에서 제외했습니다.
+현재 GitHub에 있는 실제 Firebase 설정 파일을 그대로 유지하세요.
+저장소에 이 파일이 없는 경우 전체 게임 ZIP의 빈 설정으로 온라인 랭킹이 연결되지 않습니다.
+
+v0.6.7을 이미 올렸다면 index.html, sw.js, js/items.js, js/game.js 네 파일만 교체하면 됩니다.
+이전 버전에서 업데이트한다면 업로드용 ZIP의 모든 실행 파일을 올리는 것이 안전합니다.
+
+이 업로드용 ZIP은 GitHub 배포용이며 단일 파일 START.html은 포함하지 않습니다.
+로컬 단일 파일 실행은 전체 게임 ZIP의 START.html을 사용하세요.
+기존 브라우저/주소를 그대로 사용하면 현재 저장 데이터를 계속 사용합니다.

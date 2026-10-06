@@ -1,6 +1,6 @@
 /* Mage Rising offline cache. Stale-while-revalidate: opens instantly, updates itself for next launch. */
-const CACHE='mage-rising-v0.5.4';
-const CORE=['./','index.html','style.css','js/config.js','js/items.js','js/skills.js','js/game.js','js/polish.js','js/firebase-config.js','js/rank.js','manifest.webmanifest','assets/icons/icon-192.png'];
+const CACHE='mage-rising-v0.6.8';
+const CORE=['./','index.html','style.css','js/class-data.js','js/class-art.js','js/remaster.js','assets/remaster/warrior.png','assets/remaster/rogue-dagger.png','assets/remaster/rogue-bow.png','assets/remaster/summoner-idle.png','assets/remaster/summoner-cast.png','assets/remaster/mage.png','assets/remaster/enemies.png','assets/remaster/enemies-extra.png','assets/remaster/allies.png','assets/class-skins/warrior-basic.svg','assets/class-skins/warrior-female.svg','assets/class-skins/warrior-elder.svg','assets/class-skins/warrior-elf.svg','assets/class-skins/warrior-demon.svg','assets/class-skins/rogue-basic.svg','assets/class-skins/rogue-female.svg','assets/class-skins/rogue-shadow.svg','assets/class-skins/rogue-desert.svg','assets/class-skins/rogue-mask.svg','assets/class-skins/summoner-beast.svg','assets/class-skins/summoner-fairy.svg','assets/class-skins/summoner-golem.svg','assets/class-skins/summoner-skeleton.svg','assets/class-skins/summoner-dragon.svg','js/config.js','js/items.js','js/skills.js','js/game.js','js/polish.js','js/firebase-config.js','js/rank.js','manifest.webmanifest','assets/icons/icon-192.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==CACHE).map(n=>caches.delete(n)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{
@@ -8,7 +8,7 @@ self.addEventListener('fetch',e=>{
   if(r.method!=='GET'||new URL(r.url).origin!==location.origin)return;
   e.respondWith(caches.open(CACHE).then(async c=>{
     const hit=await c.match(r);
-    const net=fetch(r).then(res=>{if(res&&res.ok)c.put(r,res.clone());return res;}).catch(()=>hit);
-    return hit||net;
+    if(hit)return hit;
+    return fetch(r).then(res=>{if(res&&res.ok)c.put(r,res.clone());return res;});
   }));
 });
