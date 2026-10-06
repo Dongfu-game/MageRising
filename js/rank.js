@@ -29,9 +29,11 @@ let loading=null,lastSent=null,view=0;
 
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function getNick(){try{return localStorage.getItem(NICK_KEY)||'';}catch(e){return '';}}
-function setNick(n){try{localStorage.setItem(NICK_KEY,n);}catch(e){}}
-function readLocal(){
-  let s={};try{s=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}')||{};}catch(e){}
+function setNick(n){try{localStorage.setItem(NICK_KEY,n);const shared=JSON.parse(localStorage.getItem('mage-rising-shared')||'{}');shared.nickname=n;localStorage.setItem('mage-rising-shared',JSON.stringify(shared));}catch(e){}}
+function currentClass(){return root.MAGE_CURRENT_CLASS?root.MAGE_CURRENT_CLASS():'mage';}
+function rankCollection(db,id){return id==='mage'?db.collection('ranks'):db.collection('classRanks').doc(id).collection('entries');}
+function readLocal(id=currentClass()){
+  let s={};try{s=JSON.parse(localStorage.getItem(id==='mage'?SAVE_KEY:SAVE_KEY+':'+id)||'{}')||{};}catch(e){}
   return {best:pure.clamp(s.best||1,1,MAX_STAGE),power:pure.clamp(s.powerLevel||0,0,MAX_POWER)};
 }
 function toastMsg(t){const el=$('toast');if(!el)return;el.textContent=t;el.classList.add('show');clearTimeout(toastMsg.t);toastMsg.t=setTimeout(()=>el.classList.remove('show'),3000);}
@@ -63,21 +65,21 @@ function init(){
 /* mode: 'force' 즉시 | 'flush' 변경분이 있으면 즉시 | 없음: 쓰기 횟수 절약용 대기 적용 */
 async function sync(mode){
   const nick=getNick();if(!configured||!nick)return false;
-  const local=readLocal(),now=Date.now();
+  const id=currentClass(),local=readLocal(id),now=Date.now();
   if(mode!=='force'){
-    if(lastSent&&lastSent.best===local.best&&lastSent.power===local.power&&lastSent.nick===nick)return false;
-    if(mode!=='flush'&&lastSent){const wait=local.best>lastSent.best?20000:300000;if(now-lastSent.t<wait)return false;}
+    if(lastSent&&lastSent.classId===id&&lastSent.best===local.best&&lastSent.power===local.power&&lastSent.nick===nick)return false;
+    if(mode!=='flush'&&lastSent&&lastSent.classId===id){const wait=local.best>lastSent.best?20000:300000;if(now-lastSent.t<wait)return false;}
   }
   const {fb,db,uid}=await init();
-  const ref=db.collection('ranks').doc(uid),snap=await ref.get();
+  const ref=rankCollection(db,id).doc(uid),snap=await ref.get();
   const m=pure.merge(snap.exists?snap.data():null,local);
-  await ref.set({nick,best:m.best,power:m.power,score:pure.score(m.best,m.power),updatedAt:fb.firestore.FieldValue.serverTimestamp()});
-  lastSent={best:local.best,power:local.power,nick,t:now};
+  await ref.set({classId:id,nick,best:m.best,power:m.power,score:pure.score(m.best,m.power),updatedAt:fb.firestore.FieldValue.serverTimestamp()});
+  lastSent={classId:id,best:local.best,power:local.power,nick,t:now};
   return true;
 }
-async function fetchTop(){
+async function fetchTop(id=currentClass()){
   const {db,uid}=await init();
-  const s=await db.collection('ranks').orderBy('score','desc').limit(TOP_N).get();
+  const s=await rankCollection(db,id).orderBy('score','desc').limit(TOP_N).get();
   return {uid,rows:s.docs.map(d=>Object.assign({id:d.id},d.data()))};
 }
 
@@ -99,14 +101,14 @@ function showNick(){
   setTimeout(()=>input.focus(),60);
 }
 
-function head(nick){return '<div class="eyebrow">HALL OF FAME</div><h2 id="modalTitle">🏆 랭킹</h2><div class="rk-me"><div><span>내 닉네임</span><b>'+esc(nick)+'</b></div><button class="subtle" id="rkNick">변경</button></div>';}
+function head(nick){return '<div class="eyebrow">HALL OF FAME</div><h2 id="modalTitle">🏆 '+esc((root.MAGE_CLASSES?.jobs[currentClass()]?.name)||'마법사')+' 랭킹</h2><div class="rk-me"><div><span>내 닉네임</span><b>'+esc(nick)+'</b></div><button class="subtle" id="rkNick">변경</button></div>';}
 function bind(){if($('rkNick'))$('rkNick').onclick=showNick;if($('rkRetry'))$('rkRetry').onclick=()=>showRank();}
 
 async function showRank(force){
   if(blocked()){toastMsg('부활한 뒤에 열 수 있어요.');return;}
   const nick=getNick();
   if(!nick){showNick();return;}
-  const my=++view;
+  const my=++view,id=currentClass();
   if(!configured){
     sheet(head(nick)+'<p class="rk-state">랭킹 서버를 준비 중이에요.<br>닉네임은 이 기기에 저장됐어요.</p>');bind();
     try{console.warn('[랭킹] js/firebase-config.js 에 Firebase 설정값을 입력하세요.');}catch(e){}
@@ -115,7 +117,7 @@ async function showRank(force){
   sheet(head(nick)+'<p class="rk-state">랭킹 불러오는 중…</p>');bind();
   try{
     await sync(force?'force':'flush');
-    const {uid,rows}=await fetchTop();
+    const {uid,rows}=await fetchTop(id);
     if(my!==view||$('modal').hidden)return;
     const local=readLocal();
     const list=rows.length?rows.map((r,i)=>{
@@ -152,5 +154,6 @@ if(st&&!nudged)new MutationObserver(()=>{
   toastMsg('🏆 랭킹에 도전해 보세요! 우측 상단에서 닉네임을 정할 수 있어요.');
 }).observe(st,{childList:true,characterData:true,subtree:true});
 
+root.addEventListener('mage-class-change',()=>{view++;lastSent=null;sync('flush').catch(()=>{});});
 root.MageRank={sync,showRank,configured};
 })(typeof window!=='undefined'?window:globalThis);

@@ -28,9 +28,9 @@ window.MAGE_SKILLS=(()=>{
  active('starfall','Starfall','cosmic',4,10,13,210,8,'3회 유성우 · 3회 명중 시 60% 별빛 공명');
  passive('singularity','중력 특이점','cosmic','레벨당 초월 반경 +8%, 피해 +10%, 흡입 강화',2);
  active('blackHole','Black Hole','cosmic',5,15,20,240,9,'5회 중력 피해 · 일반 적 흡입, 보스 이동 면역');
- const byId=Object.fromEntries(nodes.map(n=>[n.id,n]));
- const trees=families.map((id,i)=>({id,name:labels[i],color:colors[i],nodes:nodes.filter(n=>n.family===id)}));
- const blank=()=>Object.fromEntries(nodes.map(n=>[n.id,n.id==='energyBolt'?1:0]));
+ let byId=Object.fromEntries(nodes.map(n=>[n.id,n]));
+ const mageNodes=[...nodes]; const trees=families.map((id,i)=>({id,name:labels[i],color:colors[i],nodes:nodes.filter(n=>n.family===id)}));
+ const blank=()=>Object.fromEntries(nodes.map(n=>[n.id,n.id===MAGE_CLASSES.jobs[window.MAGE_CLASS_ID||'mage'].first?1:0]));
  const spent=l=>nodes.reduce((s,n)=>s+(l[n.id]||0)*n.cost,0);
  const reward=s=>s%100===0?10:s%10===0?5:1;
  const earned=s=>s+4*Math.floor(s/10)+5*Math.floor(s/100);
@@ -47,5 +47,6 @@ window.MAGE_SKILLS=(()=>{
  const suffix=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc'];
  function format(v){if(!Number.isFinite(v))return '—';const a=Math.abs(v);if(a<1000)return v.toLocaleString('en-US',{maximumFractionDigits:a<10?2:a<100?1:0});let n=Math.floor(Math.log10(a)/3);if(n>=suffix.length)return v.toExponential(2);let x=v/1000**n;if(Math.abs(Number(x.toFixed(2)))>=1000){n++;x/=1000;}return n<suffix.length?x.toFixed(2)+suffix[n]:v.toExponential(2);}
  const resistance=s=>({family:families[Math.floor((s-1)/5)%4],value:Math.min(.4,.1+Math.floor((s-1)/20)*.05)});
- return{nodes,byId,trees,blank,spent,reward,earned,mastered,available,requirement,synergy,powerStep,powerGain,power,powerCost,powerQuote,format,resistance};
+ function selectClass(id){nodes.splice(0,nodes.length,...(id==='mage'?mageNodes:MAGE_CLASSES.data[id].flatMap(t=>t.nodes)));for(const k of Object.keys(byId))delete byId[k];Object.assign(byId,Object.fromEntries(nodes.map(n=>[n.id,n])));trees.splice(0,trees.length,...(id==='mage'?families.map((id,i)=>({id,name:labels[i],color:colors[i],nodes:nodes.filter(n=>n.family===id)})):MAGE_CLASSES.data[id]));window.MAGE_CLASS_ID=id;}
+ const api={selectClass,nodes,byId,trees,blank,spent,reward,earned,mastered,available,requirement,synergy,powerStep,powerGain,power,powerCost,powerQuote,format,resistance}; selectClass(window.MAGE_CLASS_ID||'mage');return api;
 })();
