@@ -1,25 +1,25 @@
 rules_version = '2';
 service cloud.firestore {
-  match /databases/{database}/documents {
-
-    function validRank(d) {
-      return d.keys().hasOnly(['nick', 'best', 'power', 'score', 'updatedAt'])
-        && d.nick is string && d.nick.size() >= 2 && d.nick.size() <= 12
-        && d.best is int && d.best >= 1 && d.best <= 1000
-        && d.power is int && d.power >= 0 && d.power <= 99999
-        && d.score == d.best * 100000 + d.power
-        && d.updatedAt == request.time;
-    }
-
-    match /ranks/{uid} {
-      allow read: if true;
-      allow create: if request.auth != null && request.auth.uid == uid
-                    && validRank(request.resource.data);
-      // 기록(최고 스테이지)은 내려가지 않게, 본인 문서만 수정
-      allow update: if request.auth != null && request.auth.uid == uid
-                    && validRank(request.resource.data)
-                    && request.resource.data.best >= resource.data.best;
-      allow delete: if false;
-    }
+ match /databases/{database}/documents {
+  function validRank(d, job) {
+   return d.keys().hasOnly(['classId','nick','best','power','score','updatedAt'])
+    && d.classId == job && d.nick is string && d.nick.size() >= 2 && d.nick.size() <= 12
+    && d.best is int && d.best >= 1 && d.best <= 1000
+    && d.power is int && d.power >= 0 && d.power <= 99999
+    && d.score == d.best * 100000 + d.power && d.updatedAt == request.time;
   }
+  function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+  match /ranks/{uid} {
+   allow read: if true;
+   allow create: if owner(uid) && validRank(request.resource.data, 'mage');
+   allow update: if owner(uid) && validRank(request.resource.data, 'mage') && request.resource.data.best >= resource.data.best;
+   allow delete: if false;
+  }
+  match /classRanks/{job}/entries/{uid} {
+   allow read: if job in ['warrior','rogue','summoner'];
+   allow create: if job in ['warrior','rogue','summoner'] && owner(uid) && validRank(request.resource.data,job);
+   allow update: if job in ['warrior','rogue','summoner'] && owner(uid) && validRank(request.resource.data,job) && request.resource.data.best >= resource.data.best;
+   allow delete: if false;
+  }
+ }
 }
