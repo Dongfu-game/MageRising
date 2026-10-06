@@ -1,0 +1,49 @@
+{
+  "assets": [
+    {
+      "id": "warrior",
+      "path": "assets/remaster/warrior.png",
+      "sha256": "c7582f008806300d60a18aae7f8bd88e0f51a69d995ab93f733b42e5895e7df8"
+    },
+    {
+      "id": "rogue-dagger",
+      "path": "assets/remaster/rogue-dagger.png",
+      "sha256": "fe4e648e96b95aa6c645d1b2a3c6f36183a5994025c03c5c9abaee2e36ed809e"
+    },
+    {
+      "id": "rogue-bow",
+      "path": "assets/remaster/rogue-bow.png",
+      "sha256": "512b588d9731afd2e4a92c75f15d5e5cc996de9e7af2b3ac465b664e0d3b3be2"
+    },
+    {
+      "id": "summoner-idle",
+      "path": "assets/remaster/summoner-idle.png",
+      "sha256": "77abf4924de2f8e64cb0afa679f647309e021e280c36bf684c60a3e851b14a0b"
+    },
+    {
+      "id": "summoner-cast",
+      "path": "assets/remaster/summoner-cast.png",
+      "sha256": "d04a119530f95f83291f281f714922cbddfccceab491b35f404db477fdc46da5"
+    },
+    {
+      "id": "mage",
+      "path": "assets/remaster/mage.png",
+      "sha256": "6e3770ec1f2c1740d2ac79172ca14ef4438ae955a2aa1c17fdd2a03035a3158c"
+    },
+    {
+      "id": "enemies",
+      "path": "assets/remaster/enemies.png",
+      "sha256": "7dc6026da96eb27c4587a65cc1cd6ec575ca3daede2599b18af79fdee2058c98"
+    },
+    {
+      "id": "allies",
+      "path": "assets/remaster/allies.png",
+      "sha256": "90dbc07a3020bd3b8c10872d1d723cec067b72d6ea1d35842c94d9cdc6b69b2a"
+    },
+    {
+      "id": "enemies-extra",
+      "path": "assets/remaster/enemies-extra.png",
+      "sha256": "dbfbc551078a9b208adec955c0efc02a7f1873f5772f9703eea810af1fa914e7"
+    }
+  ]
+}
