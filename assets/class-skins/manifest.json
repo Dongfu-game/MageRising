@@ -1,0 +1,79 @@
+{
+  "assets": [
+    {
+      "id": "warrior-basic",
+      "path": "assets/class-skins/warrior-basic.svg",
+      "sha256": "f1130e7763894364f642435c9e10ed80045e97896b825ac215ab5455c8f2a9a7"
+    },
+    {
+      "id": "warrior-female",
+      "path": "assets/class-skins/warrior-female.svg",
+      "sha256": "bf72a6ae2141929211d469ace526b7478db7a06355f28c28f9fce3d484537725"
+    },
+    {
+      "id": "warrior-elder",
+      "path": "assets/class-skins/warrior-elder.svg",
+      "sha256": "e0e665ec661a7ebff2f628df1b6d950eca9a18a84777e62d2ca0a7cb15c0a8d1"
+    },
+    {
+      "id": "warrior-elf",
+      "path": "assets/class-skins/warrior-elf.svg",
+      "sha256": "0ea7a8832bdcb1c6cc84a0a5e155524d11453cc475b9da8c462d6663f45e9beb"
+    },
+    {
+      "id": "warrior-demon",
+      "path": "assets/class-skins/warrior-demon.svg",
+      "sha256": "4324ade9bee7c1692f88bf08156fc2c828c79ab34757d6155310a25274766015"
+    },
+    {
+      "id": "rogue-basic",
+      "path": "assets/class-skins/rogue-basic.svg",
+      "sha256": "3934f38875d85f404d980efd657a4ec0a34a4d057ee33e5a515574871eb96e88"
+    },
+    {
+      "id": "rogue-female",
+      "path": "assets/class-skins/rogue-female.svg",
+      "sha256": "77e32397917d5549623241bc0b5a5f6ec9f159898542d223a2891d9c1d3820f4"
+    },
+    {
+      "id": "rogue-shadow",
+      "path": "assets/class-skins/rogue-shadow.svg",
+      "sha256": "85b1ac40abe63d6a991998dfcac14764ce56576e6c5841b0f8fd9147b6872ac5"
+    },
+    {
+      "id": "rogue-desert",
+      "path": "assets/class-skins/rogue-desert.svg",
+      "sha256": "9e07e1ebec03399c017acd21f6e2617062cb7c047b01e0340f06995481cbfd1c"
+    },
+    {
+      "id": "rogue-mask",
+      "path": "assets/class-skins/rogue-mask.svg",
+      "sha256": "4cb63bed47e07f85891166e1b5ba08736970531cf2461a222adb215a33f08848"
+    },
+    {
+      "id": "summoner-beast",
+      "path": "assets/class-skins/summoner-beast.svg",
+      "sha256": "40f81eb5c571c45dbca97d4a18f25e6a44fea1079044e09f37808d4caab4bacd"
+    },
+    {
+      "id": "summoner-fairy",
+      "path": "assets/class-skins/summoner-fairy.svg",
+      "sha256": "34966e59387d070dbf7dc5c97274fde1b2197d7a0a4d65185d1362bc31096cea"
+    },
+    {
+      "id": "summoner-golem",
+      "path": "assets/class-skins/summoner-golem.svg",
+      "sha256": "082300db242e5831603be087c87bffc2b2a804553dfb949709d3faa9140ba6e4"
+    },
+    {
+      "id": "summoner-skeleton",
+      "path": "assets/class-skins/summoner-skeleton.svg",
+      "sha256": "7af65b1987adb017e8c1c251e7079a2e1e29a1c75fc76b657ed74f72c632f7f2"
+    },
+    {
+      "id": "summoner-dragon",
+      "path": "assets/class-skins/summoner-dragon.svg",
+      "sha256": "53cccf76b88b67405093e959fe1c0f46c92f833b303be00aae599230207462a1"
+    }
+  ]
+}
