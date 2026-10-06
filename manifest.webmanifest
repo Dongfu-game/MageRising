@@ -4,7 +4,7 @@
   "lang": "ko",
   "start_url": "./",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#10121f",
   "theme_color": "#10121f",
