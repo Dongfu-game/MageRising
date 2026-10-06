@@ -46,7 +46,8 @@ window.MAGE_SKILLS=(()=>{
  function powerQuote(l,gold,bulk){let count=bulk==='max'?Infinity:Number(bulk),n=0,cost=0;while(n<count&&n<100000){const c=powerCost(l+n);if(cost+c>gold||!Number.isFinite(cost+c))break;cost+=c;n++;}return{n,cost};}
  const suffix=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc'];
  function format(v){if(!Number.isFinite(v))return '—';const a=Math.abs(v);if(a<1000)return v.toLocaleString('en-US',{maximumFractionDigits:a<10?2:a<100?1:0});let n=Math.floor(Math.log10(a)/3);if(n>=suffix.length)return v.toExponential(2);let x=v/1000**n;if(Math.abs(Number(x.toFixed(2)))>=1000){n++;x/=1000;}return n<suffix.length?x.toFixed(2)+suffix[n]:v.toExponential(2);}
- const resistance=s=>({family:families[Math.floor((s-1)/5)%4],value:Math.min(.4,.1+Math.floor((s-1)/20)*.05)});
+ const resistanceLabels={mage:['에너지','화염','냉기','번개'],warrior:['베기','찌르기','내려찍기','방어 공격'],rogue:['단검술','궁술','독','기습'],summoner:['야수','정령','언데드','골렘']};
+ const resistance=(s,job=window.MAGE_CLASS_ID||'mage')=>{const index=Math.floor((s-1)/5)%4;return {family:families[index],value:Math.min(.4,.1+Math.floor((s-1)/20)*.05),label:(resistanceLabels[job]||resistanceLabels.mage)[index]};};
  function selectClass(id){nodes.splice(0,nodes.length,...(id==='mage'?mageNodes:MAGE_CLASSES.data[id].flatMap(t=>t.nodes)));for(const k of Object.keys(byId))delete byId[k];Object.assign(byId,Object.fromEntries(nodes.map(n=>[n.id,n])));trees.splice(0,trees.length,...(id==='mage'?families.map((id,i)=>({id,name:labels[i],color:colors[i],nodes:nodes.filter(n=>n.family===id)})):MAGE_CLASSES.data[id]));window.MAGE_CLASS_ID=id;}
  const api={selectClass,nodes,byId,trees,blank,spent,reward,earned,mastered,available,requirement,synergy,powerStep,powerGain,power,powerCost,powerQuote,format,resistance}; selectClass(window.MAGE_CLASS_ID||'mage');return api;
 })();
