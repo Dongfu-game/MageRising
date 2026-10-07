@@ -5,7 +5,7 @@ const TAU=Math.PI*2, testMode=new URLSearchParams(location.search).has('test');
 const blankLevels=()=>({damage:0,cast:0,cooldown:0,range:0});
 let classId=window.MAGE_CLASS_ID||'mage';const classKey=()=>MAGE_CLASSES.key(classId);
 const firstSkill=()=>MAGE_CLASSES.jobs[classId].first;
-const fresh=()=>({version:5,contentVersion:74,classId,inventorySort:'newest',dropChests:[],fragments:[0,0,0],forgeCount:0,gachaSeconds:0,gachaDraws:0,skinId:classId==='mage'?'default':window.MAGE_CLASS_SKINS[classId][0].id,powerLevel:0,skillLevels:S.blank(),activeSlots:[firstSkill(),null,null],cooldowns:{},bossCleared:[],fullSetPending:[],fullSetClaimed:[],energyCasts:0,migration:null,recommendMode:'balanced',uniqueClaimed:[],uniqueChests:[],shield:0,tier:0,levels:Array.from({length:10},blankLevels),gold:C.startGold,stage:1,best:1,kills:0,bossActive:false,hp:100,inventory:[],equipped:{},drops:0,totalKills:0,deaths:0,dead:false,started:false,sound:false,lowFX:matchMedia('(prefers-reduced-motion: reduce)').matches});
+const fresh=()=>({version:5,contentVersion:75,classId,inventorySort:'newest',dropChests:[],fragments:[0,0,0],forgeCount:0,gachaSeconds:0,gachaDraws:0,skinId:classId==='mage'?'default':window.MAGE_CLASS_SKINS[classId][0].id,powerLevel:0,skillLevels:S.blank(),activeSlots:[firstSkill(),null,null],cooldowns:{},bossCleared:[],fullSetPending:[],fullSetClaimed:[],energyCasts:0,migration:null,recommendMode:'balanced',uniqueClaimed:[],uniqueChests:[],shield:0,tier:0,levels:Array.from({length:10},blankLevels),gold:C.startGold,stage:1,best:1,kills:0,bossActive:false,hp:100,inventory:[],equipped:{},drops:0,totalKills:0,deaths:0,dead:false,started:false,sound:false,lowFX:matchMedia('(prefers-reduced-motion: reduce)').matches});
 let state=fresh(),storageOK=true;
 function validate(v){
  if(!v||![1,2,3,4,5].includes(v.version))throw Error('지원하지 않는 저장 파일입니다.');
@@ -878,7 +878,10 @@ function classTick(dt){if(classId==='warrior'&&classP('noMind')&&time>=nextNoMin
 for(const e of enemies){if(e.hp<=0)continue;if(e.poison?.length&&time<(e.poisonUntil||0)){for(const p of e.poison){let amount=p.damage*dt;if(time<(e.deathMarkUntil||0))amount*=1+e.deathMarkBonus;applyDamage(e,resistDamage(e,amount,'ice'),'#91dd73','',p.source,'dot',p.epoch);if(e.hp<=0)break;}}else e.poison=[];}
 for(const a of [...allies]){if(a.hp<=0||time>a.expires+1e-8||!state.activeSlots.includes(a.skill))continue;a.moving=false;const targets=enemies.filter(e=>e.hp>0&&e.x<=980),target=targets.sort((x,y)=>x.x-y.x)[0];
 if(a.skill==='boar'){a.moving=true;const from=a.x;a.x+=420*dt;for(const e of targets)if(!a.seen.has(e.id)&&e.x>=from-35&&e.x<=a.x+35){a.seen.add(e.id);classHit(e,a.st.damage,a.n,a.st,'summon');a.attackAt=time;if(e.boss)e.boarSlowUntil=time+1.5;else if(time>=(e.boarKnock||0)){e.x=Math.min(980,e.x+30+2*(a.st.level-1));e.boarKnock=time+1;}}if(a.x>1100)a.hp=0;continue;}
-if(['deathKnight','wolf'].includes(a.skill)&&a.x<a.destination){a.moving=true;a.x=Math.min(a.destination,a.x+a.n.speed*dt);a.next=Math.max(a.next,time);continue;}
+if(['deathKnight','wolf'].includes(a.skill)&&a.x<a.destination){
+const contact=targets.filter(e=>e.x>=a.x-45).sort((u,v)=>u.x-v.x)[0],limit=contact?Math.min(a.destination,Math.max(a.x,contact.x-40)):a.destination;
+const nextX=Math.min(limit,a.x+a.n.speed*dt);if(nextX>a.x+1e-8){a.moving=true;a.x=nextX;a.next=Math.max(a.next,time);continue;}}
+
 if(!target){a.next=Math.max(a.next,time);continue;}
 const melee=!!a.n.speed,frontOnly=a.blocker||a.skill==='wolf';if(!melee&&!a.golem&&target.x>750){a.next=Math.max(a.next,time);continue;}
 if(melee&&!a.blocker&&target.x-a.x>a.n.radius){a.moving=true;a.x=Math.min(target.x-a.n.radius,a.x+a.n.speed*dt);a.next=Math.max(a.next,time);continue;}
@@ -898,8 +901,8 @@ a.boost=1;}
 if(a.skill==='dragon'&&time>=a.breath&&a.breath<a.expires){a.breath+=4/(1+a.st.summonSpeed);const end=Math.min(a.expires,time+1/(1+a.st.summonSpeed));for(let j=1;j<=4;j++)schedule((end-time)*j/4,()=>{if(!allies.includes(a)||a.hp<=0)return;for(const e of enemies.filter(e=>e.hp>0&&Math.abs(e.y-target.y)<70&&e.x<a.x+700))classHit(e,a.st.unit*2,a.n,a.st,'summon');classFx(target,a.n,'브레스');});}
 }
 const expired=allies.filter(a=>a.hp<=0||time>a.expires+1e-8||!state.activeSlots.includes(a.skill));for(const a of expired)if(!a.n.duration&&!['boar','skeleton'].includes(a.skill)&&state.activeSlots.includes(a.skill)&&!allies.some(b=>!expired.includes(b)&&b.skill===a.skill))state.cooldowns[a.skill]=Math.max(state.cooldowns[a.skill]||0,a.st.cooldown);allies=allies.filter(a=>!expired.includes(a));}
-function classEnemyAttack(e,dt){const g=allies.filter(a=>a.blocker&&a.hp>0).sort((a,b)=>b.x-a.x)[0],blocked=g&&e.x<=g.x+45&&e.x>=g.x-45;
-const victim=blocked?g:allies.filter(a=>!a.blocker&&a.hp>0&&a.n.hp&&Math.abs(a.x-e.x)<45&&Math.abs(a.y-e.y)<55).sort((a,b)=>Math.abs(a.x-e.x)-Math.abs(b.x-e.x))[0];if(!victim)return false;if(blocked)e.x=Math.max(e.x,g.x+40);
+function classEnemyAttack(e,dt){const g=allies.filter(a=>a.blocker&&a.hp>0&&e.x<=a.x+45&&e.x>=a.x-45).sort((a,b)=>b.x-a.x)[0],blocked=!!g;
+const victim=blocked?g:allies.filter(a=>!a.blocker&&a.hp>0&&a.n.hp&&Math.abs(a.x-e.x)<45&&Math.abs(a.y-e.y)<55).sort((a,b)=>Math.abs(a.x-e.x)-Math.abs(b.x-e.x))[0];if(!victim)return false;
 e.attackCD-=dt;if(e.attackCD<=0){e.attackCD+=C.enemyAttackInterval;const damage=e.attack*100/(100+victim.armor),taken=Math.min(victim.hp,damage);victim.hp-=damage;victim.flash=time+.15;if(victim.golem&&victim.n.reflect){classHit(e,taken*victim.n.reflect,victim.n,{...victim.st,crit:0,bossBonus:0},'reflect');summonVisual('reflect',victim,e,25);}}
 if(!blocked&&e.x<=e.stopX)e.attackCD+=dt;return !!blocked;}
 function classDamagePlayer(amount){if(time<(classBuffs.evade||0))return 0;const st=stats(),armor=st.armor+(time<(classBuffs.absolute||0)?classBuffs.absoluteBonus:0);let damage=amount*100/(100+armor);
