@@ -7,6 +7,7 @@ window.MAGE_COMBAT_ART=(()=>{
  function warrior(ctx,o){const key=data[o.id]?o.id:'warrior-basic',rec=load(key);if(!rec.ready)return false;const {row,f}=warriorFrame(o),frame=imageFrame(key,row,f),fr=frame.fr,scale=160/fr.scaleHeight;ctx.drawImage(frame.image,o.x-fr.ax*scale,o.y-fr.ay*scale,fr.sw*scale,fr.sh*scale);return true;}
  function slash(ctx,f,x,y,p){const rec=load('rogue-slash');if(!rec.ready)return false;const row=f.poison?1:0,frame=Math.min(3,Math.floor(p*4)),fr=data['rogue-slash'].frames[row][frame];
  const copies=f.skill==='flurry'?3:f.skill==='daggerTriple'?2:1;
+ if(f.clone){ctx.save();ctx.shadowColor='#bd8cff';ctx.shadowBlur=12;ctx.strokeStyle='#d4b1ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,46,-1.3,1.3);ctx.stroke();ctx.restore();}
  for(let i=0;i<copies;i++){ctx.save();ctx.translate(x+i*8,y+(i-(copies-1)/2)*14);ctx.rotate((i-(copies-1)/2)*.5);ctx.drawImage(rec.image,fr.sx,fr.sy,fr.sw,fr.sh,-54,-51,108,102);ctx.restore();}
  // Brief blade swing at caster and impact spark at the target, visual only.
  if(p<.45){ctx.save();ctx.globalAlpha*=.55;ctx.drawImage(rec.image,fr.sx,fr.sy,fr.sw,fr.sh,f.originX+9,f.originY-36,60,64);ctx.restore();}
