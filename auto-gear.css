@@ -1,0 +1,22 @@
+/* Eight fixed equipment slots, experience and learned options. */
+#equipmentPanel .equipment-left h2 {margin:0 0 12px;font-size:22px}
+#equipmentPanel .equipment-right {display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.auto-gear-cards {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-content:start;min-height:0;overflow:auto;padding:4px 8px 16px 0}
+.auto-gear-card {background:#202136;border:1px solid #45415f;border-radius:16px;padding:16px;min-width:0}
+.auto-gear-card header {display:flex;gap:12px;align-items:center}
+.auto-gear-card header svg {width:32px;height:36px;color:#cdb4ff;flex-shrink:0}
+.auto-gear-card h3 {margin:0 0 6px;font-size:17px}
+.auto-gear-card h3 span {font-size:13px;color:#ab9fe0}
+.auto-gear-card header strong {font-size:14px;color:#9ce5d0}
+.gear-xp {height:6px;background:#34354c;border-radius:8px;overflow:hidden;margin:14px 0 6px}
+.gear-xp i {display:block;height:100%;background:linear-gradient(90deg,#9070de,#d5bbff)}
+.auto-gear-card small {color:#b4b1c8;font-size:12px}
+.gear-options {border-top:1px solid #3f3b54;margin-top:12px;padding-top:4px}
+.gear-options p {margin:8px 0;font-size:13px}
+.legacy-option {color:#a7c8b8}
+.auto-gear-card details {margin-top:14px;font-size:12px;color:#a9a3bd}
+.auto-gear-card details p {line-height:1.8}
+.auto-gear-rules {margin:16px 0;line-height:1.7;font-size:12px;color:#b9b2c9}
+#autoGearHistory {font-size:12px;color:#c6b5ef;line-height:1.7}
+#fragmentSummary {margin:8px 0 12px;line-height:1.6}
+@media(max-width:850px){.auto-gear-cards{grid-template-columns:1fr}.auto-gear-card{padding:12px}#equipmentPanel .equipment-left h2{font-size:18px}}

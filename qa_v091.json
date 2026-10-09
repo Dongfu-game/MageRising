@@ -1,0 +1,23 @@
+{
+  "version": "0.9.1",
+  "node_canvas_checks": 485,
+  "status": "PASS",
+  "phone_browser_tested": false,
+  "html_ids_unique": true,
+  "html_references_present": true,
+  "ranking_firebase_unchanged": true,
+  "hp_base": 130,
+  "boss_hp_base": 45,
+  "coverage": [
+    "normal/boss shard ratios and uniform slots",
+    "first boss milestones and repeat exclusion",
+    "retroactive reward and v5-v6 migration",
+    "active/passive/transcendence effective levels",
+    "SP/reset/prerequisite separation",
+    "legacy equipped stats/unique/set retention",
+    "actual four-class combat",
+    "card ownership and adapted effects",
+    "gacha tenth guarantee",
+    "startup backup and reloading"
+  ]
+}

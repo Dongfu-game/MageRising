@@ -34,16 +34,17 @@ html = html.replace('<head>','<head><script>window.MAGE_REMASTER_EMBEDDED='+json
 html = html.replace('<head>','<head><script>window.MAGE_CLASS_SKIN_EMBEDDED='+json.dumps(class_embedded)+';</script>')
 html = html.replace('<head>', '<head><script>window.MAGE_EFFECT_EMBEDDED='+json.dumps(effect_embedded,separators=(',',':'))+';</script>')
 html = re.sub(r'<link[^>]*href="style.css"[^>]*>', lambda _: '<style>\n'+(root/'style.css').read_text()+'\n</style>', html)
-html = re.sub(r'\?v=(?:0701?|071|072|073|074|075|076|077|078|079|080|081|082|083|084|085|090)(?=\")','',html)
+html = re.sub(r'\?v=(?:0701?|071|072|073|074|075|076|077|078|079|080|081|082|083|084|085|090|091)(?=\")','',html)
 html = re.sub(r'<link[^>]*href="cards.css"[^>]*>', lambda _: '<style>\n'+(root/'cards.css').read_text()+'\n</style>', html)
+html = re.sub(r'<link[^>]*href="auto-gear.css"[^>]*>', lambda _: '<style>\n'+(root/'auto-gear.css').read_text()+'\n</style>', html)
 html = re.sub(r'<link[^>]*href="landscape.css"[^>]*>', lambda _: '<style>\n'+(root/'landscape.css').read_text()+'\n</style>', html)
 html = html.replace('<script src="js/config.js"></script>', '<script>window.MAGE_SKIN_EMBEDDED='+json.dumps(embedded,separators=(',',':'))+';</script>\n<script src="js/config.js"></script>')
-for name in ['class-data','config','items','skills','class-art','remaster','combat-art','summoner-art','warrior-fx','cards','game','polish','orientation','firebase-config','rank']:
+for name in ['class-data','config','items','skills','class-art','remaster','combat-art','summoner-art','warrior-fx','cards','auto-gear','game','polish','orientation','firebase-config','rank']:
     html = html.replace('<script src="js/'+name+'.js"></script>','<script>\n'+(root/('js/'+name+'.js')).read_text()+'\n</script>')
 for card_art in ['battle-series','casual-series']:
     html=html.replace('assets/cards/'+card_art+'.png','data:image/png;base64,'+base64.b64encode((root/('assets/cards/'+card_art+'.png')).read_bytes()).decode())
 (root/'START.html').write_text(html)
-version='0.9.0'
+version='0.9.1'
 out=root.parent/('MageRising_v'+version+'.zip')
 temporary=out.with_suffix('.zip.tmp')
 with zipfile.ZipFile(temporary,'w',zipfile.ZIP_DEFLATED) as archive:
