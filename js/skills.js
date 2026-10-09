@@ -15,9 +15,9 @@ window.MAGE_SKILLS=(()=>{
  active('flameExplosion','Fire Wall','fire',2,3,4,105,12,'불길을 세워 지속 피해 · 2초+0.1초/Lv · 0.5초마다 화상 중첩');
  passive('spread','연소 확산','fire','화상 적 사망 시 주변에 가장 강한 화상 전염 · 레벨당 반경 +15');
  active('meteor','Meteor','fire',3,7,8.5,165,7,'운석 충돌 + 3초 불바닥');
- active('iceBolt','Ice Bolt','ice',1,1.3,1.1,40,2,'냉기탄 · 적을 잠시 둔화');
+ active('iceBolt','Ice Spear','ice',1,1.3,1.1,40,2,'직선 관통 얼음창 · 적마다 1회 피해 · 냉기 중첩과 빙결 파쇄');
  passive('cold','혹한','ice','3회 적중 시 빙결 · 레벨당 둔화/빙결 강화');
- active('iceSpear','Frost Nova','ice',2,3.5,4,150,2,'적 중심 얼음 파동 · 광역 피해와 냉기 중첩 · 둔화');
+ active('iceSpear','Snowball','ice',2,3.5,4,150,2,'굴러가는 눈덩이 · 적을 7번 칸까지 밀고 폭발 · 적중당 크기·범위 +5%, 피해 +10% (최대 10회) · 보스 최대 2칸 넉백');
  passive('shatter','빙결 파쇄','ice','빙결 적에게 레벨당 25% 추가 냉기 피해 후 빙결 해제');
  active('blizzard','Blizzard','ice',3,8,3,155,3,'지속 눈보라 · 3틱 적중 시 빙결 · 파쇄 미발동');
  active('lightning','Chain Lightning','lightning',1,.3,1.2,125,4,'시전0.12초/쿨타임0.3초 · 물량50%+5%p/Lv(최대100%) 타격 · 0.025초마다 전이 · 총 기본 피해 분할 · 일반 적 전이마다 +3% 합연산 · 보스 증폭 없음 · 한 적에도 반복 타격');
