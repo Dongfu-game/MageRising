@@ -12,9 +12,9 @@ window.MAGE_CARDS=(()=>{
  ['death','죽음의 군주','받는 최종 피해 감소',.01,'reduction',null,2,1],
  ['storm','폭풍 야수','치명타 확률',.005,'crit',null,3,1],
  ['casualMage','카페의 마법사','골드 획득량',.05,'gold',null,0,2],
- ['casualWarrior','수련 후 검사','장비 합성 성공률',.005,'forge',null,1,2],
- ['casualRogue','밤거리의 도적','추가 장비 드롭 확률',.05,'drop',null,2,2],
- ['casualSummoner','늑대와 쉬는 소환술사','무료 장비 뽑기 대기 감소',.02,'gacha',null,3,2]
+ ['casualWarrior','수련 후 검사','조각 경험치 증가',.005,'forge',null,1,2],
+ ['casualRogue','밤거리의 도적','추가 조각 드롭 확률',.05,'drop',null,2,2],
+ ['casualSummoner','늑대와 쉬는 소환술사','무료 조각 뽑기 대기 감소',.02,'gacha',null,3,2]
  ];
  const list=specs.map((a,i)=>Object.freeze({id:a[0],name:a[1],label:a[2],base:a[3],effect:a[4],job:a[5],column:a[6],row:a[7],index:i}));
  const blank=()=>({version:1,copies:Array(12).fill(0),pending:[],points:0,draws:0,claims:[]});
@@ -29,7 +29,7 @@ window.MAGE_CARDS=(()=>{
  function reveal(all=false){if(!data.pending.length)return[];const next=snapshot(),ids=all?next.pending.splice(0):[next.pending.shift()],counts=Array(12).fill(0),results=[];for(const i of ids)counts[i]++;for(let i=0;i<12;i++)if(counts[i])results.push({...apply(next,i,counts[i]),received:counts[i]});commit(next);return results;}
  function pointDraw(){if(data.points<POINT_COST)return false;const next=snapshot();next.points-=POINT_COST;next.draws++;next.pending.push(Math.min(11,Math.floor(Math.random()*12)));commit(next);return true;}
  function bonuses(job){const out={damage:0,boss:0,hp:0,reduction:0,crit:0,gold:0,forge:0,drop:0,gacha:0};for(const n of list)if(!n.job||n.job===job)out[n.effect]+=n.base*progress(n.index).mult;return out;}
- function effectText(i,star=progress(i).star){const n=list[i],value=n.base*Math.max(0,star+1)*100;return n.label+' '+(n.effect==='gacha'?'−':'+')+Number(value.toFixed(2))+(n.effect==='crit'||n.effect==='forge'?'%p':'%');}
+ function effectText(i,star=progress(i).star){const n=list[i],value=n.base*Math.max(0,star+1)*100;return n.label+' '+(n.effect==='gacha'?'−':'+')+Number(value.toFixed(2))+(n.effect==='crit'?'%p':'%');}
  function replace(v){const next=validate(v);const s=JSON.parse(localStorage.getItem(key)||'{}');s.cardsV1=next;localStorage.setItem(key,JSON.stringify(s));data=next;error='';}
  return{list,blank,validate,snapshot,progress,bonuses,effectText,grant,reveal,pointDraw,replace,POINT_COST,get error(){return error;}};
 })();
