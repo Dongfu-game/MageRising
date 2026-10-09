@@ -5,7 +5,7 @@ const TAU=Math.PI*2, testMode=new URLSearchParams(location.search).has('test');
 const blankLevels=()=>({damage:0,cast:0,cooldown:0,range:0});
 let classId=window.MAGE_CLASS_ID||'mage';const classKey=()=>MAGE_CLASSES.key(classId);
 const firstSkill=()=>MAGE_CLASSES.jobs[classId].first;
-const fresh=()=>({version:5,contentVersion:82,classId,inventorySort:'newest',dropChests:[],fragments:[0,0,0],forgeCount:0,gachaSeconds:0,gachaDraws:0,skinId:classId==='mage'?'default':window.MAGE_CLASS_SKINS[classId][0].id,powerLevel:0,skillLevels:S.blank(),activeSlots:[firstSkill(),null,null],cooldowns:{},bossCleared:[],fullSetPending:[],fullSetClaimed:[],energyCasts:0,migration:null,recommendMode:'balanced',uniqueClaimed:[],uniqueChests:[],shield:0,tier:0,levels:Array.from({length:10},blankLevels),gold:C.startGold,stage:1,best:1,kills:0,bossActive:false,hp:100,inventory:[],equipped:{},drops:0,totalKills:0,deaths:0,dead:false,started:false,sound:false,screenShake:true,lowFX:matchMedia('(prefers-reduced-motion: reduce)').matches});
+const fresh=()=>({version:5,contentVersion:83,classId,inventorySort:'newest',dropChests:[],fragments:[0,0,0],forgeCount:0,gachaSeconds:0,gachaDraws:0,skinId:classId==='mage'?'default':window.MAGE_CLASS_SKINS[classId][0].id,powerLevel:0,skillLevels:S.blank(),activeSlots:[firstSkill(),null,null],cooldowns:{},bossCleared:[],fullSetPending:[],fullSetClaimed:[],energyCasts:0,migration:null,recommendMode:'balanced',uniqueClaimed:[],uniqueChests:[],shield:0,tier:0,levels:Array.from({length:10},blankLevels),gold:C.startGold,stage:1,best:1,kills:0,bossActive:false,hp:100,inventory:[],equipped:{},drops:0,totalKills:0,deaths:0,dead:false,started:false,sound:false,screenShake:true,lowFX:matchMedia('(prefers-reduced-motion: reduce)').matches});
 let state=fresh(),storageOK=true;
 function validate(v){
  if(!v||![1,2,3,4,5].includes(v.version))throw Error('지원하지 않는 저장 파일입니다.');
@@ -580,7 +580,7 @@ function update(dt){time+=dt;meterClock+=dt;const due=scheduled.filter(x=>x.at<=
  if(e.burns?.length){for(const b of e.burns){const slice=Math.min(dt,b.left);b.left-=slice;const amount=resistDamage(e,b.dps*[0,1,1.2,2][b.stacks||1]*slice,'fire');recordDamage(b.source,Math.min(e.hp,amount),'burn',b.epoch);e.hp-=amount;}if(e.hp<=0){kill(e);continue;}e.burns=e.burns.filter(b=>b.left>0);e.burnLeft=e.burns.length?Math.max(...e.burns.map(b=>b.left)):0;if(!e.burns.length)e.burnDPS=0;}
  if(time<e.ccUntil)continue;
  if(classId!=='mage'&&classEnemyAttack(e,dt))continue;
- if(e.x>e.stopX)e.x=Math.max(e.stopX,e.x-e.speed*(1-Math.max(time<(e.boarSlowUntil||0)?.2:0,e.slow>0?Math.min(.65,.15+.08*passive('cold')*Math.max(1,e.iceStacks)):0,time<(e.novaUntil||0)?e.novaSlow:0))*dt);
+ if(e.x>e.stopX)e.x=Math.max(e.stopX,e.x-e.speed*(1-Math.max(time<(e.shockUntil||0)?.5:0,time<(e.boarSlowUntil||0)?.2:0,e.slow>0?Math.min(.65,.15+.08*passive('cold')*Math.max(1,e.iceStacks)):0,time<(e.novaUntil||0)?e.novaSlow:0))*dt);
  else{e.attackCD-=dt;if(e.attackCD<=0){e.attackCD+=C.enemyAttackInterval;const taken=damagePlayer(e.attack);float(hero.x,hero.y-85,'−'+number(taken),'#ff9f9b',false);effects.push({tier:-1,x:hero.x,y:hero.y-35,age:0,duration:.2,color:'#ff9797',targets:[]});if(state.hp<=0){die();break;}}}}
  enemies=enemies.filter(e=>e.hp>0);
  if(!state.dead){if(classId!=='mage')classTick(dt);else runeActive=false;advanceCasting(dt);}
