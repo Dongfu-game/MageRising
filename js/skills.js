@@ -20,15 +20,16 @@ window.MAGE_SKILLS=(()=>{
  active('iceSpear','Frost Nova','ice',2,3.5,4,150,2,'적 중심 얼음 파동 · 광역 피해와 냉기 중첩 · 둔화');
  passive('shatter','빙결 파쇄','ice','빙결 적에게 레벨당 25% 추가 냉기 피해 후 빙결 해제');
  active('blizzard','Blizzard','ice',3,8,3,155,3,'지속 눈보라 · 3틱 적중 시 빙결 · 파쇄 미발동');
- active('lightning','Chain Lightning','lightning',1,1.1,1.2,125,4,'최초 대상 포함 4명 · 레벨마다 연쇄 대상 +1명, 투자 Lv.10 13명 · 세트 Lv.15 18명 · 전이당 피해 10% 감소, 최초 피해의 최소 50%');
+ active('lightning','Chain Lightning','lightning',1,.3,1.2,125,4,'시전0.12초/쿨타임0.3초 · 물량50%+5%p/Lv(최대100%) 타격 · 0.025초마다 전이 · 총 기본 피해 분할 · 일반 적 전이마다 +3% 합연산 · 보스 증폭 없음 · 한 적에도 반복 타격');
  passive('shock','감전','lightning','3초 감전 · 적중 시 레벨당 8% 확률로 짧은 마비');
- active('chainLightning','Lightning Spear','lightning',2,2,6,140,4,'번개 창 직접 발사 · 직선 관통 피해 · 감전/마비');
+ active('chainLightning','Plasma Field','lightning',2,2,2,160,4,'3초 플라즈마 장판 · 0.5초마다 지속 피해 · 활성 중 번개 피해 +15%+1%p/Lv · 자신도 강화 · 강화 중첩 없음');
  passive('jump','전류 도약','lightning','레벨당 추가 전이 대상 +1 · 전이 피해 45%, 감전 적용');
  active('thunderstorm','Thunderstorm','lightning',3,5,3.45,210,5,'넓은 낙뢰 + 4초 전기장(8회) · 피해 15% 강화 · 첫 낙뢰 마비: 일반 0.4초/보스 0.12초, 제어 면역 적용');
  active('starfall','Starfall','cosmic',4,10,13,210,8,'3회 유성우 · 3회 명중 시 60% 별빛 공명');
  passive('singularity','중력 특이점','cosmic','레벨당 초월 반경 +8%, 피해 +10%, 흡입 강화',2);
  active('blackHole','Black Hole','cosmic',5,15,20,240,9,'5회 중력 피해 · 일반 적 흡입, 보스 이동 면역');
  let byId=Object.fromEntries(nodes.map(n=>[n.id,n]));
+ nodes.find(n=>n.id==='lightning').cast=.12;
  for(const n of nodes)if(['energyBolt','magicArrow','arcaneBurst','flameExplosion','iceSpear','chainLightning'].includes(n.id))n.directRework=true;
  const mageNodes=[...nodes]; const trees=families.map((id,i)=>({id,name:labels[i],color:colors[i],nodes:nodes.filter(n=>n.family===id)}));
  const blank=()=>Object.fromEntries(nodes.map(n=>[n.id,n.id===MAGE_CLASSES.jobs[window.MAGE_CLASS_ID||'mage'].first?1:0]));
