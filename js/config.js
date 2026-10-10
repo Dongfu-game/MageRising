@@ -1,6 +1,6 @@
 'use strict';
 window.MAGE_CONFIG = Object.freeze({
-  version:5, saveKey:'mage-rising-v01', killsPerStage:100, hpGrowth:1.1, normalHPGrowth:1.24809265, bossHPGrowthStep:0.003, goldGrowth:1.2,
+  version:5, saveKey:'mage-rising-v01', killsPerStage:100, hpGrowth:1.1, normalHPGrowth:1.6, bossHPGrowthStep:0.003, goldGrowth:1.2,
   // Stage-only correction: interpolate multipliers, never read player power or equipment.
   bossHPAnchors:[[1,1],[5,3],[10,12],[20,60],[30,15],[50,2],[75,1]],
   baseGold:10, baseEnemyHP:300, bossBaseHP:45, baseEnemyAttack:1, bossHP:10, bossHPStep:2, bossAttack:2,
