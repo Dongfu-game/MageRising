@@ -1,0 +1,12 @@
+{
+  "version": "0.9.2",
+  "card_unit_checks": 178,
+  "game_regression_and_integration_checks": 521,
+  "grade_simulations": 200000,
+  "image_count": 24,
+  "image_dimensions": [
+    384,
+    512
+  ],
+  "phone_visual_test": false
+}
