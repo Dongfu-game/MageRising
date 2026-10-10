@@ -39,3 +39,4 @@ window.MAGE_CONFIG = Object.freeze({
   rarities:[{name:'일반',color:'#afbacb',mult:1},{name:'고급',color:'#82ddbb',mult:1.3},{name:'희귀',color:'#8eafff',mult:1.7},{name:'유니크',color:'#e0a9ff',mult:3.2}],
   biomes:[{name:'달빛 숲',top:'#171b36',bottom:'#293846',ground:'#15232f',moon:'#c8baff'}, {name:'서리의 계곡',top:'#13283c',bottom:'#365567',ground:'#213846',moon:'#a8e9ee'}, {name:'황혼의 유적',top:'#2c1935',bottom:'#553945',ground:'#342631',moon:'#ffc9a0'}, {name:'별이 잠든 황야',top:'#201e42',bottom:'#363757',ground:'#22233a',moon:'#dbb1ff'}, {name:'공허의 경계',top:'#180d2b',bottom:'#3d2451',ground:'#23132e',moon:'#f0adff'}]
 });
+
