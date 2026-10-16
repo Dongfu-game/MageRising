@@ -5,16 +5,16 @@ window.MAGE_SKILLS=(()=>{
  const nodes=[];
  function active(id,name,family,rank,cd,coef,radius,fx,description){nodes.push({id,name,en:name.toUpperCase(),family,rank,max:10,cost:rank,cd,coef,radius,fx,cast:.16+rank*.08,type:'active',color:colors[families.indexOf(family)],symbol:['⛰','♨','❄','ϟ','✴'][families.indexOf(family)],description});}
  function passive(id,name,family,description,cost=1){nodes.push({id,name,family,max:5,cost,type:'passive',description,color:colors[families.indexOf(family)]});}
- active('energyBolt','Rock Shot','energy',1,1,1.6,38,0,'좁은 착탄 범위의 바위 공격 · 지각 충격 확률 기절');
+ active('energyBolt','Rock Shot','energy',1,1,1.6,38,0,'기본 돌 1개 · 2레벨마다 +1개 · 추가 돌 각각 40% 피해 · 확률 기절');
  passive('piercing','대지의 힘','energy','레벨당 대지 피해 +5% · 시너지/세트와 합연산');
- active('magicArrow','Earth Spike','energy',2,2.5,4,120,1,'지면 가시 반복 피해 · 지속 2초+0.15초/Lv · 범위 +3%/Lv · 확률 기절');
- passive('overcharge','지각 충격','energy','록 샷/가시 적중 시 레벨당 8% 기절 확률 · 기절 0.45초+0.1초/Lv · 지진 첫 충격 확정 · 보스 지속 25%');
- active('arcaneBurst','Earthquake','energy',3,5,8,210,10,'첫 충격 확정 기절 + 3초 지진 · 화면 흔들림 · 보스 짧은 기절');
- active('fireball','Fireball','fire',1,1.2,1.25,60,11,'착탄 폭발과 3초 화상');
+ active('magicArrow','Stone Shower','energy',2,2.5,4,120,1,'돌비 장판 · 지속 2초+0.2초/Lv · 0.5초마다 피해 · 확률 기절');
+ passive('overcharge','지각 충격','energy','록 샷/스톤샤워 적중 시 레벨당 8% 기절 확률 · 기절 0.45초+0.1초/Lv · 지진 첫 충격 확정 · 보스 지속 25%');
+ active('arcaneBurst','Earthquake','energy',3,5,8,210,10,'3초 지진 · 중심100% / 거리1~4칸80/60/40/20% · 첫 충격 확정 기절 · 화면 흔들림');
+ active('fireball','Fireball','fire',1,1.2,1.25,60,11,'착탄 폭발 · 레벨당 폭발 반경 +5% · 3초 화상');
  passive('blaze','맹화','fire','레벨당 화상 지속 +0.4초 · 화상 최대 3단계: ×1 / ×1.2 / ×2 · 재부여 시 시간 갱신');
- active('flameExplosion','Fire Wall','fire',2,3,4,105,12,'불길을 세워 지속 피해 · 2초+0.1초/Lv · 0.5초마다 화상 중첩');
+ active('flameExplosion','Fire Wall','fire',2,3,4,105,12,'가로 불벽 · 레벨당 길이 +5% · 지속 2초+0.1초/Lv · 0.5초마다 피해');
  passive('spread','연소 확산','fire','화상 적 사망 시 주변에 가장 강한 화상 전염 · 레벨당 반경 +15');
- active('meteor','Meteor','fire',3,7,8.5,165,7,'운석 충돌 + 3초 불바닥');
+ active('meteor','Meteor','fire',3,7,8.5,100,7,'큰 운석 1개 · Lv2부터 레벨당 미니 +1개(피해20%) · 좁은 충돌 범위 + 3초 불바닥');
  active('iceBolt','Ice Spear','ice',1,1.3,1.1,40,2,'직선 관통 얼음창 · 적마다 1회 피해 · 냉기 중첩과 빙결 파쇄');
  passive('cold','혹한','ice','3회 적중 시 빙결 · 레벨당 둔화/빙결 강화');
  active('iceSpear','Snowball','ice',2,3.5,4,150,2,'굴러가는 눈덩이 · 적을 7번 칸까지 밀고 폭발 · 적중당 크기·범위 +5%, 피해 +10% (최대 10회) · 보스 넉백 없음 · 맞은 자리에서 1초 구른 뒤 폭발');
@@ -53,4 +53,5 @@ window.MAGE_SKILLS=(()=>{
  function selectClass(id){nodes.splice(0,nodes.length,...(id==='mage'?mageNodes:MAGE_CLASSES.data[id].flatMap(t=>t.nodes)));for(const k of Object.keys(byId))delete byId[k];Object.assign(byId,Object.fromEntries(nodes.map(n=>[n.id,n])));trees.splice(0,trees.length,...(id==='mage'?families.map((id,i)=>({id,name:labels[i],color:colors[i],nodes:nodes.filter(n=>n.family===id)})):MAGE_CLASSES.data[id]));window.MAGE_CLASS_ID=id;}
  const api={mageNodes,selectClass,nodes,byId,trees,blank,spent,reward,earned,mastered,available,requirement,synergy,powerStep,powerGain,power,powerCost,powerQuote,format,resistance}; selectClass(window.MAGE_CLASS_ID||'mage');return api;
 })();
+
 
