@@ -1,9 +1,8 @@
 'use strict';
 window.MAGE_CONFIG = Object.freeze({
-  version:5, saveKey:'mage-rising-v01', killsPerStage:100, hpGrowth:1.1, normalHPGrowth: 1.24809265, bossHPGrowthStep:0.003, goldGrowth:1.2,
-  // Stage-only correction: interpolate multipliers, never read player power or equipment.
-  bossHPAnchors:[[1,1],[5,3],[10,12],[20,60],[30,15],[50,2],[75,1]],
-  baseGold:10, baseEnemyHP:350, bossBaseHP:45, baseEnemyAttack:1, bossHP:10, bossHPStep:2, bossAttack:2,
+  version:5, saveKey:'mage-rising-v01', killsPerStage:100, hpGrowth:1.1, goldGrowth:1.2,
+  // HP increments grow once per decade; hpGrowth remains enemy ATTACK growth.
+  baseGold:10, baseEnemyHP:100, baseEnemyAttack:1, bossHealthMultiplier:10, enemyHPIncrement:100, enemyHPIncrementGrowth:1.1, bossAttack:2,
   basePlayerHP:100, baseMana:10, startGold:120, enemyAttackInterval:1.7,
   basePackInterval:2.1, packIntervalStep:0.01, minPackInterval:0.5, enemySpeedMultiplier:1.08, maxEnemies:54, maxStage:1000,
   regenPerSecond:0.0025, inventoryLimit:140, upgradeBaseCost:4, upgradeCostGrowth:1.028,
@@ -39,4 +38,5 @@ window.MAGE_CONFIG = Object.freeze({
   rarities:[{name:'일반',color:'#afbacb',mult:1},{name:'고급',color:'#82ddbb',mult:1.3},{name:'희귀',color:'#8eafff',mult:1.7},{name:'유니크',color:'#e0a9ff',mult:3.2}],
   biomes:[{name:'달빛 숲',top:'#171b36',bottom:'#293846',ground:'#15232f',moon:'#c8baff'}, {name:'서리의 계곡',top:'#13283c',bottom:'#365567',ground:'#213846',moon:'#a8e9ee'}, {name:'황혼의 유적',top:'#2c1935',bottom:'#553945',ground:'#342631',moon:'#ffc9a0'}, {name:'별이 잠든 황야',top:'#201e42',bottom:'#363757',ground:'#22233a',moon:'#dbb1ff'}, {name:'공허의 경계',top:'#180d2b',bottom:'#3d2451',ground:'#23132e',moon:'#f0adff'}]
 });
+
 
