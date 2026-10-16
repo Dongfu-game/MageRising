@@ -5,3 +5,8 @@
 
 /* v0.9.2 grade lines */
 .cards-grid{display:block}.card-line{margin-bottom:22px}.card-line>header{text-align:left;border-bottom:1px solid #bb985855;margin-bottom:9px}.card-line>header h3{font-size:15px;color:#edd28a;margin:5px 0}.card-line>header p{font-size:11px;color:#c9b7eb;margin:5px 0 9px}.card-line-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.card-portrait{display:block;aspect-ratio:3/4;height:auto;object-fit:contain;background-image:none}.card-grade{display:inline-block;color:#f0ce87;font-size:11px}.collection-card.unowned .card-portrait{filter:grayscale(1);opacity:.4}@media(max-width:760px){.card-line-grid{gap:6px}.card-line>header p{font-size:9px}}
+
+
+/* Five combat tabs share the existing dock in a single row at every viewport. */
+.tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:minmax(0,1fr);align-items:stretch}
+.tabs>button{width:auto;min-width:0;min-height:0;height:100%;box-sizing:border-box;overflow:hidden}
