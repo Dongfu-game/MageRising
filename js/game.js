@@ -243,7 +243,9 @@ function attackAt(s){return C.baseEnemyAttack*C.hpGrowth**(s-1);}function goldAt
 // Geometric interpolation keeps stage transitions smooth while avoiding an ever-growing extra exponent.
 function hpCorrection(s,anchors){for(let i=1;i<anchors.length;i++){const [a,x]=anchors[i-1],[b,y]=anchors[i];if(s<=b)return x*(y/x)**((s-a)/(b-a));}return anchors[anchors.length-1][1];}
 function decadeFactor(s){return Math.ceil(Math.max(1,s)/10);}
-function stageHPFactor(s){return Math.max(1,Math.floor(s)-10);}
+function stageHPFactor(s){
+  return 1 + Math.max(0, Math.floor(s)-10) * 0.1;
+}
 function hpAt(s){return baseHPAt(s)*stageHPFactor(s);}
 function bossHPAt(s){return baseBossHPAt(s)*stageHPFactor(s);}
 function enemyHPLabel(){const boss=enemies.find(e=>e.boss&&e.hp>0&&!e.rewarded);return boss?'BOSS HP '+number(Math.max(0,boss.hp))+' / '+number(boss.maxHP)+' · 방어 '+boss.armor:state.bossActive?'BOSS HP '+number(bossHPAt(state.stage))+' · 방어 '+number(enemyArmor(state.stage)):'적 HP '+number(hpAt(state.stage))+' · 방어 '+number(enemyArmor(state.stage));}
