@@ -6,7 +6,7 @@ const CARDS=window.MAGE_CARDS,GEAR=window.MAGE_AUTO_GEAR;let cardUISignature='';
 const blankLevels=()=>({damage:0,cast:0,cooldown:0,range:0});
 let classId=window.MAGE_CLASS_ID||'mage';const classKey=()=>MAGE_CLASSES.key(classId);
 const firstSkill=()=>MAGE_CLASSES.jobs[classId].first;
-const fresh=()=>({version:6,contentVersion:102,classId,gearV1:GEAR.blank(),rebirths:0,runBest:1,uniqueBoxes:0,cycleCleared:[],inventorySort:'newest',dropChests:[],fragments:[0,0,0],forgeCount:0,gachaSeconds:0,gachaDraws:0,skinId:classId==='mage'?'default':window.MAGE_CLASS_SKINS[classId][0].id,powerLevel:0,skillLevels:S.blank(),activeSlots:[firstSkill(),null,null],cooldowns:{},bossCleared:[],fullSetPending:[],fullSetClaimed:[],energyCasts:0,migration:null,recommendMode:'balanced',uniqueClaimed:[],uniqueChests:[],shield:0,tier:0,levels:Array.from({length:10},blankLevels),gold:C.startGold,stage:1,best:1,kills:0,bossActive:false,encounterBossDown:false,hp:100,inventory:[],equipped:{},drops:0,totalKills:0,deaths:0,dead:false,started:false,sound:false,screenShake:true,lowFX:matchMedia('(prefers-reduced-motion: reduce)').matches});
+const fresh=()=>({version:6,contentVersion:103,classId,gearV1:GEAR.blank(),rebirths:0,runBest:1,uniqueBoxes:0,cycleCleared:[],inventorySort:'newest',dropChests:[],fragments:[0,0,0],forgeCount:0,gachaSeconds:0,gachaDraws:0,skinId:classId==='mage'?'default':window.MAGE_CLASS_SKINS[classId][0].id,powerLevel:0,skillLevels:S.blank(),activeSlots:[firstSkill(),null,null],cooldowns:{},bossCleared:[],fullSetPending:[],fullSetClaimed:[],energyCasts:0,migration:null,recommendMode:'balanced',uniqueClaimed:[],uniqueChests:[],shield:0,tier:0,levels:Array.from({length:10},blankLevels),gold:C.startGold,stage:1,best:1,kills:0,bossActive:false,encounterBossDown:false,hp:100,inventory:[],equipped:{},drops:0,totalKills:0,deaths:0,dead:false,started:false,sound:false,screenShake:true,lowFX:matchMedia('(prefers-reduced-motion: reduce)').matches});
 applyClassGear();let state=fresh(),storageOK=true;
 function validate(v){
  if(!v||![1,2,3,4,5,6].includes(v.version))throw Error('지원하지 않는 저장 파일입니다.');
@@ -146,10 +146,34 @@ function castRenewedMagic(id){const n=S.byId[id];if(!n||!state.skillLevels[id]||
 function atlasDraw(name,sx,sy,sw,sh,x,y,w,h){const img=mageTexture(name);if(!img)return false;const iw=name==='earthquake'?1774:1536,ih=name==='earthquake'?887:1024;ctx.drawImage(img,sx*img.naturalWidth/iw,sy*img.naturalHeight/ih,sw*img.naturalWidth/iw,sh*img.naturalHeight/ih,x,y,w,h);return true;}
 function drawSpellRock(x,y,size,rotation=0,variant=-1){ctx.save();ctx.translate(x,y);ctx.rotate(rotation);const drawn=variant<0?atlasDraw('rock-shot',170,100,1230,820,-size/2,-size/3,size,size*2/3):atlasDraw('stone-shower',(variant%3)*512,Math.floor((variant%6)/3)*512,512,512,-size/2,-size/2,size,size);if(!drawn){ctx.fillStyle='#9b8a74';ctx.beginPath();ctx.moveTo(-size*.5,-size*.1);ctx.lineTo(-size*.2,-size*.4);ctx.lineTo(size*.35,-size*.3);ctx.lineTo(size*.5,size*.15);ctx.lineTo(0,size*.35);ctx.closePath();ctx.fill();}ctx.restore();}
 function drawModularWall(f){const frame=Math.floor(f.age/.13)%4,w=f.wallLength||f.r*2,left=f.x-w/2,cap=Math.min(88,w/3),h=78,ground=f.y+20;ctx.save();ctx.beginPath();ctx.rect(left,f.y-100,w,130);ctx.clip();const tile=(row,x,width)=>{const ys=[100,410,690],hs=[270,230,240];return atlasDraw('fire-wall',frame*384,ys[row],384,hs[row],x,ground-h,width,h);};if(!mageTexture('fire-wall')){for(let j=0;j<Math.ceil(w/25);j++){const x=left+j*25;ellipse(x,ground-25,13,25+8*Math.sin(j+f.age*10),'#ef8d48');}ctx.restore();return;}const start=left+cap*.82,end=left+w-cap*.82,step=cap*.86;for(let x=start;x<end;x+=step)tile(1,x,cap);tile(0,left,cap);tile(2,left+w-cap,cap);ctx.restore();}
+// Screen-plane fractures: deterministic geometry, short pulse at each damage tick.
+function drawQuakeCracks(f){
+ const pulse=Math.floor((f.age+1e-8)/.5),local=f.age-pulse*.5;
+ if(local>.38||f.age>f.duration-.25)return;
+ const fade=Math.max(0,1-local/.38),spread=Math.min(1,.12+local/.11),cx=f.x,cy=f.y-30;
+ let seed=((Math.floor(cx)*73856093)^(Math.floor(f.y)*19349663)^((pulse+1)*83492791))>>>0;
+ const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+ const paths=[],count=state.lowFX?8:13;
+ for(let k=0;k<count;k++){
+  const angle=k*TAU/count+(rand()-.5)*.26,dx=Math.cos(angle),dy=Math.sin(angle);
+  let length=1100;
+  if(dx>0)length=Math.min(length,(1000-cx)/dx);else if(dx<0)length=Math.min(length,-cx/dx);
+  if(dy>0)length=Math.min(length,(365-cy)/dy);else if(dy<0)length=Math.min(length,(40-cy)/dy);
+  length=Math.max(20,length);const pts=[[cx,cy]];
+  for(let j=1;j<=7;j++){const d=length*j/7,jitter=(rand()-.5)*Math.min(32,d*.25);pts.push([cx+dx*d-dy*jitter,cy+dy*d+dx*jitter]);}
+  paths.push(pts);
+  for(const j of [2,4,5]){if(rand()>.72)continue;const root=pts[j],a=angle+(rand()>.5?1:-1)*(.35+rand()*.5),len=25+rand()*70;
+   paths.push([root,[root[0]+Math.cos(a)*len*.45,root[1]+Math.sin(a)*len*.45],[root[0]+Math.cos(a+.15)*len,root[1]+Math.sin(a+.15)*len]]);}
+ }
+ ctx.save();ctx.beginPath();ctx.rect(0,40,1000,325);ctx.clip();ctx.globalAlpha*=fade;ctx.lineCap='round';ctx.lineJoin='round';
+ for(const pts of paths){const visible=pts.map(p=>[cx+(p[0]-cx)*spread,cy+(p[1]-cy)*spread]);line(visible,'#201a18',3.4);line(visible,'#b9a077',1.5);line(visible.map(p=>[p[0]+.8,p[1]-.8]),'#f1dfb5',.65);}
+ if(local<.14){ctx.globalAlpha*=1-local/.14;ellipse(cx,cy,5+local*40,3+local*22,'#f9e4bb');}
+ ctx.restore();
+}
 function drawRenewedMagic(f){const t=f.age,x=f.x,y=f.y;ctx.save();ctx.globalAlpha=Math.min(1,Math.max(0,(f.duration-t)*5));
  if(f.kind==='rock'){const q=Math.min(1,t/f.flight),target=enemies.find(e=>e.id===f.targetId&&e.hp>0),to=target&&!f.impact?target:f;if(!f.impact)drawSpellRock(f.origin.x+(to.x-f.origin.x)*q,f.origin.y+(to.y-15-f.origin.y)*q,42,t*5+f.variant);}
  else if(f.kind==='stoneRain'){ellipse(x,y+12,f.r,f.r*.3,'#b9a6cf12');const count=state.lowFX?6:12;for(let j=0;j<count;j++){const q=(t*2.5+j/count)%1,bx=x+Math.sin(j*7.13)*f.r*.85,by=y+Math.cos(j*4.71)*f.r*.22-160*(1-q);drawSpellRock(bx,by,28+(j%3)*5,t*3+j,j%6);}}
- else if(f.kind==='quake'){const frame=Math.min(7,Math.floor(t/f.duration*8)),w=f.r*2,h=w*.28;atlasDraw('earthquake',(frame%4)*443.5,Math.floor(frame/4)*443.5,443.5,443.5,x-w/2,y+30-h*.85,w,h);}
+ else if(f.kind==='quake'){drawQuakeCracks(f);}
  else if(f.kind==='wall')drawModularWall(f);
  else if(f.kind==='fireballFlight'){const q=Math.min(1,t/f.flight),bx=f.origin.x+(x-f.origin.x)*q,by=f.origin.y+(y-15-f.origin.y)*q;line([[bx-38,by-5],[bx,by]],'#ed9d5088',11);ellipse(bx,by,14,12,'#f29a4e');ellipse(bx+3,by,7,7,'#ffe0a0');}
  else if(f.kind==='fireburst'){const q=t/f.duration;ellipse(x,y-10,f.r*(.25+.75*q),f.r*.45*(.25+.75*q),'#f49a4c55');for(let j=0;j<7;j++){const a=j*TAU/7;ellipse(x+Math.cos(a)*f.r*q,y-10+Math.sin(a)*f.r*q*.45,5,8,'#ffcb7b');}}
