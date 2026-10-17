@@ -17,7 +17,9 @@ window.MAGE_AUTO_GEAR=(()=>{
  const initial=[2,48,1,2,1,3,5,2];
  function factor(slot,l){return slot===0?Math.pow(1.18,Math.min(l,3600)):slot===1?Math.pow(1.16,Math.min(l,4000)):slot===2?Math.pow(1.10,Math.min(l,6500)):1;}
  function base(slot,s){const l=level(s),seed=Math.max(initial[slot],s.seed);return Math.min(1e270,slot<=2?seed*factor(slot,l):seed+[.25,.2,.12,.4,.3][slot-3]*l);}
- function slotMods(g,job,slot){const s=g.slots[slot],o={...s.legacyBase};const k=baseKinds(job)[slot];o[k]=(o[k]||0)+base(slot,s);for(const table of [s.options,s.legacyOptions])for(const [key,value] of Object.entries(table))o[key]=(o[key]||0)+value;return o;}
+ // Percentage-point increments: first ten levels +1% each, next ten +1.1%, etc.
+ function weaponBonus(s){const l=level(s),q=Math.floor(l/10),r=l%10;return Math.min(1e260,(Math.pow(1.1,q)-1)+.01*r*Math.pow(1.1,q));}
+ function slotMods(g,job,slot){const s=g.slots[slot],o={...s.legacyBase};const k=baseKinds(job)[slot];if(slot!==0)o[k]=(o[k]||0)+base(slot,s);for(const table of [s.options,s.legacyOptions])for(const [key,value] of Object.entries(table))o[key]=(o[key]||0)+value;return o;}
  function allMods(g,job){const out={};for(let i=0;i<8;i++)for(const [k,v] of Object.entries(slotMods(g,job,i)))out[k]=(out[k]||0)+v;return out;}
  function setCounts(g){const out=Object.fromEntries(Object.keys(MAGE_ITEMS.sets).map(k=>[k,0]));for(const s of g.slots.slice(0,7))if(s.legacySet)out[s.legacySet]++;return out;}
  const trait=g=>g.milestones.filter(n=>n%100===0).length;
@@ -33,6 +35,7 @@ window.MAGE_AUTO_GEAR=(()=>{
  for(const stage of v.fullSetPending||[])for(let i=0;i<7;i++)addUnits(i,3,1);
  for(let i=0;i<8;i++){const item=worn[i];if(!item)continue;const s=g.slots[i],xp=item.enhanceXP||0,l=xp<1?0:Math.floor((1+Math.sqrt(4*xp-3))/2),mult=1+(item.unique?l*.1:0),kind=oldKinds[i],value=item.value*mult;if(kind===baseKinds(job)[i])s.seed=Math.max(initial[i],value/factor(i,level(s)));else s.legacyBase[kind]=value;for(const a of item.affixes||[])s.legacyOptions[a.kind]=(s.legacyOptions[a.kind]||0)+a.value*mult;s.legacyUnique=!!item.unique;s.legacySet=item.setId??null;}
  for(const stage of [...(v.bossCleared||[])].sort((a,b)=>a-b))milestone(g,job,stage);return g;}
- return {grades,xpValues,baseKinds,pools,increments,blank,validate,level,progress,base,allMods,slotMods,setCounts,trait,milestone,refine,sampleGrade,grant,migrate};
+ return {weaponBonus,grades,xpValues,baseKinds,pools,increments,blank,validate,level,progress,base,allMods,slotMods,setCounts,trait,milestone,refine,sampleGrade,grant,migrate};
 })();
+
 
