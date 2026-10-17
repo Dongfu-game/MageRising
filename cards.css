@@ -10,3 +10,8 @@
 /* Five combat tabs share the existing dock in a single row at every viewport. */
 .tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:minmax(0,1fr);align-items:stretch}
 .tabs>button{width:auto;min-width:0;min-height:0;height:100%;box-sizing:border-box;overflow:hidden}
+
+
+.card-new-sheet{background-size:300% 200%;background-repeat:no-repeat;aspect-ratio:512/700!important;height:auto!important}.collection-card.promotion-1{border-color:#cbd4e4}.collection-card.promotion-2{border-color:#ffd569}.collection-card.promotion-3{border-color:#65d8ff}.collection-card.promotion-4{border-color:#e1baff;box-shadow:0 0 12px #bba4eb55}
+
+.card-line-grid.six-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
