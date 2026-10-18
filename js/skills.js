@@ -39,7 +39,7 @@ window.MAGE_SKILLS=(()=>{
  const mastered=l=>nodes.filter(n=>n.family!=='cosmic').every(n=>l[n.id]===n.max);
  function requirement(id){const n=byId[id];if(!n)return null;const list=trees.find(t=>t.id===n.family).nodes,pos=list.indexOf(n);return{previous:pos?list[pos-1]:null,power:n.family==='cosmic'?0:[0,10,30,50,100][pos],cosmic:n.family==='cosmic'};}
  function available(l,id,powerLevel=Infinity){const n=byId[id],r=requirement(id);if(!n)return false;return(!r.cosmic||mastered(l))&&(!r.previous||(l[r.previous.id]||0)>=(r.cosmic?r.previous.max:1))&&(r.cosmic||powerLevel>=r.power||(l[id]||0)>0);}
- function synergy(l,id){const n=byId[id];if(!n||n.family==='cosmic'||n.type!=='active')return 0;return nodes.filter(x=>x.type==='active'&&x.family===n.family&&x.id!==id).reduce((sum,x)=>sum+(l[x.id]||0)*(x.rank===2?.03:x.rank===3?.02:n.rank===2?.03:.02),0);}
+ function synergy(l,id){const n=byId[id];if(!n||n.family==='cosmic'||n.type!=='active'||(window.MAGE_CLASS_ID==='warrior'&&n.family==='lightning'))return 0;return nodes.filter(x=>x.type==='active'&&x.family===n.family&&x.id!==id).reduce((sum,x)=>sum+(l[x.id]||0)*(x.rank===2?.03:x.rank===3?.02:n.rank===2?.03:.02),0);}
  const powerTotals=[0],powerLimit=1e100;
  function powerStep(l){return Math.min(powerLimit,Math.pow(1.1,Math.floor((Math.max(1,l)-1)/10)));}
  function powerGain(l){const q=Math.floor(l/10),r=l%10;if(q>4700)return powerLimit;while(powerTotals.length<=q){const n=powerTotals.length;powerTotals.push(Math.min(powerLimit,powerTotals[n-1]+10*powerStep(n*10)));}return Math.min(powerLimit,powerTotals[q]+r*powerStep(q*10+1));}
@@ -53,5 +53,6 @@ window.MAGE_SKILLS=(()=>{
  function selectClass(id){nodes.splice(0,nodes.length,...(id==='mage'?mageNodes:MAGE_CLASSES.data[id].flatMap(t=>t.nodes)));for(const k of Object.keys(byId))delete byId[k];Object.assign(byId,Object.fromEntries(nodes.map(n=>[n.id,n])));trees.splice(0,trees.length,...(id==='mage'?families.map((id,i)=>({id,name:labels[i],color:colors[i],nodes:nodes.filter(n=>n.family===id)})):MAGE_CLASSES.data[id]));window.MAGE_CLASS_ID=id;}
  const api={mageNodes,selectClass,nodes,byId,trees,blank,spent,reward,earned,mastered,available,requirement,synergy,powerStep,powerGain,power,powerCost,powerQuote,format,resistance}; selectClass(window.MAGE_CLASS_ID||'mage');return api;
 })();
+
 
 
