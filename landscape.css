@@ -18,3 +18,12 @@
 .character-stats>.stat-detail{border:1px solid #36334b;border-radius:9px;background:#1b2031;padding:8px;display:grid;gap:4px;min-width:0;text-align:left}.stat-detail:hover{border-color:#8873a4}
 
 @media(max-height:450px){.skill-info small{display:none}.skill-info .skill-symbol{font-size:14px}.skill-info h4{font-size:11px}.skill-info b{font-size:9px}.skill-info{gap:0;justify-content:center}.skill-card{gap:4px}.skill-adjust button,.skill-equip{padding:4px}}
+
+/* v0.9.27: stage -> map -> wallet, independent of the right action buttons. */
+.battle-top{justify-content:flex-start;gap:clamp(8px,2vw,20px)}
+.battle-top>div:first-child{flex:0 1 auto;min-width:0;max-width:44%}
+.battle-top .eyebrow{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.battle-top .stage{white-space:nowrap}
+.battle-top .wallet{margin-left:auto;flex:0 0 auto;white-space:nowrap;min-width:0}
+#worldMapButton{flex:0 0 auto;padding:8px 11px;border-radius:9px;font-size:12px;white-space:nowrap;line-height:1.2}
+@media(max-width:760px){#worldMapButton{font-size:11px;padding:7px 9px}.battle-top>div:first-child{max-width:38%}.battle-top .wallet strong{font-size:clamp(14px,2.45vw,18px)}}
