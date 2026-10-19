@@ -31,7 +31,7 @@ function close(){root.hidden=true;window.MAGE_MAP_OPEN=false;}
 function turn(delta){page=Math.max(0,page+delta);const s=api.snapshot(),first=page*10+1;selected=first<=s.runBest?Math.min(first+9,s.runBest):null;paint();}
 root.addEventListener('click',e=>{const job=e.target.closest('[data-map-job]');if(job){if(job.dataset.mapJob===api.current()||api.select(job.dataset.mapJob))locate();return;}const n=e.target.closest('[data-stage]');if(n&&!n.disabled){selected=Number(n.dataset.stage);paint();}});
 $('mapPrev').onclick=()=>turn(-1);$('mapNext').onclick=()=>turn(1);$('mapLocate').onclick=locate;$('mapEnter').onclick=()=>{if(selected!==null&&api.enter(selected))close();};$('mapResume').onclick=()=>{if(api.enter(api.snapshot().stage))close();};
-const button=document.createElement('button');button.textContent='🗺 여정 지도';button.className='subtle';button.onclick=open;document.querySelector('.header-actions').prepend(button);
+const button=document.createElement('button');button.textContent='🗺 여정 지도';button.className='subtle';button.id='worldMapButton';button.setAttribute('aria-label','여정 지도 열기');button.onclick=open;document.querySelector('.battle-top').insertBefore(button,document.getElementById('classSwitch'));
 const box=$('classSwitch');if(box)box.hidden=true;
 window.MAGE_WORLD_MAP={open,close,record};open();
 })();
