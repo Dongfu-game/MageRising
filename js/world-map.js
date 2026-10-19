@@ -2,14 +2,15 @@
 (()=>{
 const api=window.MAGE_MAP_API;if(!api)return;
 // Follow the painted road from the lower-left entrance to the upper-right gate.
-const points=[[11,76],[24,74],[38,63],[28,45],[43,36],[51,41],[65,49],[82,38],[73,23],[85,26]];
+const forestPoints=[[11,76],[24,74],[38,63],[28,45],[43,36],[51,41],[65,49],[82,38],[73,23],[85,26]];
+const palacePoints=[[12,86],[22,79],[33,74],[44,67],[50,59],[53,51],[64,44],[72,36],[79,27],[86,24]];
 let page=0,selected=1;
 const root=document.createElement('section');root.id='worldMap';root.setAttribute('aria-label','직업별 여정 지도');
 root.innerHTML='<header><div><small>MAGE RISING</small><h1>달빛 숲의 여정</h1></div><div id="mapJobs"></div><button id="mapResume">전투로 돌아가기</button></header><div class="map-viewport"><div class="map-land"><div id="mapNodes"></div><div id="mapPawns"></div><div id="mapGuardian"></div></div></div><footer><button id="mapPrev">◀ 이전</button><span id="mapRange"></span><button id="mapNext">다음 ▶</button><button id="mapLocate">내 위치</button><span id="mapInfo"></span><button id="mapEnter">도전</button></footer>';
 document.body.append(root);
 const $=id=>document.getElementById(id);
 function record(id){if(id===api.current())return api.snapshot();try{const s=JSON.parse(localStorage.getItem(MAGE_CLASSES.key(id))||'{}');return {stage:s.stage||1,runBest:s.runBest||s.best||1,cleared:s.cycleCleared||s.bossCleared||[]};}catch(e){return {stage:1,runBest:1,cleared:[]};}}
-function paint(){const s=api.snapshot(),first=page*10+1,end=first+9;
+function paint(){const s=api.snapshot(),first=page*10+1,end=first+9,palace=first>=101&&first<=200,points=palace?palacePoints:forestPoints;root.classList.toggle('palace',palace);root.querySelector('h1').textContent=palace?'귀문궁 · 원혼의 여정':'달빛 숲의 여정';
 // Never retain a challenge target from a different page.
 if(selected<first||selected>end)selected=null;
 $('mapJobs').innerHTML=Object.entries(MAGE_CLASSES.jobs).map(([id,j])=>'<button data-map-job="'+id+'" aria-pressed="'+(id===api.current())+'">'+j.name+'</button>').join('');
@@ -19,7 +20,8 @@ $('mapPawns').innerHTML=ids.map(id=>{const r=records[id];if(Math.floor((r.stage-
 const [x,y]=points[(r.stage-1)%10],group=ids.filter(k=>records[k].stage===r.stage),offset=(group.indexOf(id)-(group.length-1)/2)*2.3;
 return '<button class="map-pawn '+(id===api.current()?'chosen':'')+'" data-map-job="'+id+'" style="left:'+(x+offset)+'%;top:'+(y-1)+'%" title="'+MAGE_CLASSES.jobs[id].name+' '+r.stage+'단계"><img src="assets/map/'+id+'-default.png" alt="'+MAGE_CLASSES.jobs[id].name+' 기본 캐릭터"/></button>';}).join('');
 const guard=end%50===0&&!s.cleared.includes(end),king=end%100===0;
-$('mapGuardian').innerHTML=guard?'<div class="guardian '+(king?'king':'soldier')+'"><img src="assets/map/skeleton-'+(king?'king':'warrior')+'-v2.png" alt="'+(king?'해골왕':'해골전사')+' 관문 수호자"/><b>'+end+' · '+(king?'해골왕':'해골전사')+'</b></div>':'';
+const palaceBoss=palace?MAGE_GWIMUN.boss(end):null;
+$('mapGuardian').innerHTML=guard&&palaceBoss?'<div class="guardian palace-boss"><img src="assets/gwimun/'+palaceBoss.key+'-1.png" alt="'+palaceBoss.name+' 관문 수호자"/><b>'+end+' · '+palaceBoss.name+'</b></div>':guard?'<div class="guardian '+(king?'king':'soldier')+'"><img src="assets/map/skeleton-'+(king?'king':'warrior')+'-v2.png" alt="'+(king?'해골왕':'해골전사')+' 관문 수호자"/><b>'+end+' · '+(king?'해골왕':'해골전사')+'</b></div>':'';
 $('mapRange').textContent=first+'–'+end+' 단계';$('mapPrev').disabled=page===0;
 $('mapInfo').textContent=MAGE_CLASSES.jobs[api.current()].name+' · '+(selected===null?'발판을 선택하세요':selected+'단계');$('mapEnter').disabled=selected===null||selected>s.runBest;
 }
