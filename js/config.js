@@ -4,7 +4,7 @@ window.MAGE_CONFIG = Object.freeze({
   // HP increments grow once per decade; hpGrowth remains enemy ATTACK growth.
   baseGold:10, baseEnemyHP:100, baseEnemyAttack:1, bossHealthMultiplier:10, enemyHPIncrement:100, enemyHPIncrementGrowth:1.1, bossAttack:2,
   skeletonMageAttackInterval:1.6, rebirthBoxFragments:10, basePlayerHP:100, baseMana:10, startGold:120, enemyAttackInterval:1.7,
-  basePackInterval:2.1, packIntervalStep:0.01, minPackInterval:0.5, enemySpeedMultiplier:1.08, maxEnemies:54, maxStage:1000,
+  basePackInterval:2.1, packIntervalStep:0.01, minPackInterval:0.5, enemySpeedMultiplier:1.08, maxEnemies:100, maxStage:1000,
   regenPerSecond:0.0025, inventoryLimit:140, upgradeBaseCost:4, upgradeCostGrowth:1.028,
   spells:[
     {name:'에너지볼트',en:'ENERGY BOLT',trait:'마력 충격',traitText:'적을 밀침 · 같은 적 1초 간격 · 보스 면역',symbol:'✧',color:'#90cfff',radius:48,description:'마력탄이 터지며 주변 적에게 함께 피해를 줍니다.'},
