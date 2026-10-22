@@ -40,11 +40,12 @@ window.MAGE_GUNNER=(()=>{
   function flash(x,y,r,color,nuclear=false){if(visuals.filter(f=>f.blast).length>=12)return;visuals.push({blast:true,x,y,r,color,nuclear,age:0,duration:nuclear?.48:.28});}
   function area(pos,r,raw,s,opts={}){const pool=alive();for(const e of pool)if(Math.hypot(e.x-pos.x,e.y-pos.y)<=r){let n=raw;if(opts.center&&Math.hypot(e.x-pos.x,e.y-pos.y)<=r/3)n*=1+.05*lv('fireControl');if(opts.center&&e.boss)n*=1+.03*lv('excalibur');hit(e,n,s,opts);}flash(pos.x,pos.y,r,opts.source==='nuclear'?'#b9e48a':'#e8c796',opts.source==='nuclear');}
   function fragmentStats(v=state(),c=api.character(v)){const level=lv('m995',v,10);return {count:level?3+Math.floor((level-1)/3):0,radius:(120+10*Math.max(0,level-1))*(1+c.rangeBonus),share:.25};}
-  function fragmentTargets(primary,pos,config){return alive().filter(e=>e!==primary&&e.x>=pos.x&&Math.abs(e.y-pos.y)<=35+(e.x-pos.x)*.75&&Math.hypot(e.x-pos.x,e.y-pos.y)<=config.radius).sort((a,b)=>Math.hypot(a.x-pos.x,a.y-pos.y)-Math.hypot(b.x-pos.x,b.y-pos.y)||a.id-b.id).slice(0,config.count);}
+  // count controls artwork only. Every other target in the circle is hit once.
+  function fragmentTargets(primary,pos,config){return config.count?alive().filter(e=>e!==primary&&Math.hypot(e.x-pos.x,e.y-pos.y)<=config.radius):[];}
   function fragments(pos,targets,s,config,snapshot,stage){if(!config.count||state()!==snapshot||state().stage!==stage||state().dead)return;
-   // Exactly one hit per distinct secondary target; fragments never invoke shot().
    for(const e of targets)hit(e,s.damage*config.share,s,{secondary:true,ignore:0});
-   const cap=state().lowFX?6:24;for(let j=0;j<config.count&&visuals.filter(f=>f.shard).length<cap;j++){const e=targets[j],angle=(j-(config.count-1)/2)*.28;visuals.push({shard:true,x:pos.x,y:pos.y-12,endX:e?e.x:Math.min(1000,pos.x+45*Math.cos(angle)),endY:e?e.y-12:pos.y-12+45*Math.sin(angle),age:0,duration:.12});}
+   flash(pos.x,pos.y,config.radius,'#f4d58e');
+   const cap=state().lowFX?6:24;for(let j=0;j<config.count&&visuals.filter(f=>f.shard).length<cap;j++){const angle=j*Math.PI*2/config.count;visuals.push({shard:true,x:pos.x,y:pos.y-12,endX:pos.x+config.radius*.8*Math.cos(angle),endY:pos.y-12+config.radius*.8*Math.sin(angle),age:0,duration:.12});}
   }
   function densest(pool,r){const cells=new Map(),size=r||90;for(const e of pool){const key=Math.floor(e.x/size)+':'+Math.floor(e.y/size);if(!cells.has(key))cells.set(key,[]);cells.get(key).push(e);}let best=pool[0],count=-1;for(const a of pool){const cx=Math.floor(a.x/size),cy=Math.floor(a.y/size);let n=0;for(let x=cx-1;x<=cx+1;x++)for(let y=cy-1;y<=cy+1;y++)for(const b of cells.get(x+':'+y)||[])if(Math.hypot(a.x-b.x,a.y-b.y)<=r)n++;if(n>count||n===count&&a.x<best.x){best=a;count=n;}}return best;}
   function queue(delay,run){pending.push({left:delay,run,snapshot:state(),stage:state().stage,epoch:api.epoch()});}
