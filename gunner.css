@@ -1,0 +1,7 @@
+#gunnerHUD{display:flex;align-items:center;gap:10px;position:absolute;left:3%;right:3%;top:114px;bottom:auto;pointer-events:none;font-size:12px;z-index:4}
+#gunnerHUD[hidden]{display:none}#gunnerHUD>div{width:min(240px,42vw);padding:7px 10px;background:#121722de;border:1px solid #819a76;border-radius:10px;color:#e6eddc}
+.gunner-ammo-track{height:4px;margin-top:5px;background:#343b37;border-radius:4px;overflow:hidden}.gunner-ammo-track i{display:block;height:100%;background:#b6d296}
+#gunnerStrike{pointer-events:auto;min-height:44px;padding:8px 14px;background:#292737;color:#d8d3e2;border:1px solid #8c8273;border-radius:10px}#gunnerStrike.ready{background:#67502c;color:#fff0c6;border-color:#f7d68c;box-shadow:0 0 12px #e6b85955}#gunnerStrike:disabled{opacity:.65}
+@media(max-height:520px){#gunnerHUD{top:100px;bottom:auto;font-size:10px}#gunnerHUD>div{padding:5px 8px}#gunnerStrike{min-height:40px;padding:5px 9px}}
+body[data-job="gunner"] .active-slot [id^="slotStatus"]{display:block!important;font-size:8px;line-height:1.1}
+body[data-job="gunner"] .active-slot .slot-fill{display:block!important;opacity:.18}
