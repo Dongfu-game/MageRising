@@ -1,0 +1,131 @@
+{
+  "version": "0.9.38",
+  "unit": {
+    "checks": [
+      "drone base damage equals half rapid",
+      "same fire interval as rapid",
+      "drone damage is recorded",
+      "drone consumes no ammunition",
+      "unlearned drone does not fire",
+      "inherits rapid damage, speed, crit and AP",
+      "drone fragments hit all other nearby enemies",
+      "drone fragments are quarter of drone raw damage",
+      "drone fragments cannot recurse",
+      "support protocol strengthens drone",
+      "no nuclear or tactical charge from drone",
+      "drone adds no nuclear explosion",
+      "drone fires during reload",
+      "drone does not interrupt reload",
+      "prefers different enemy to latest body target",
+      "target sharing boosts drone direct damage",
+      "base laser coefficient and period",
+      "max laser coefficient and cooldown",
+      "laser can charge",
+      "laser warns before damage",
+      "laser pierces along its line",
+      "laser excludes off-line enemy",
+      "laser has no fragments or charge procs",
+      "laser cancels on stage change",
+      "laser cancels when combat epoch changes",
+      "laser timer runs independently of reload",
+      "old save preserves rounds and transcend charge",
+      "legacy sniper timer migrates without long wait",
+      "drone timer round trips",
+      "unchanged existing attack rapidShot",
+      "unchanged existing attack artilleryShot",
+      "five distinct drone sprites"
+    ],
+    "errors": []
+  },
+  "browser": {
+    "checks": [
+      "drone replaces sniper label and tree",
+      "SP total remains380",
+      "legacy save migrates with SP and ammo intact",
+      "summoner still available",
+      "new timers survive job switch",
+      "100 monster wave cap",
+      "drone direct and laser both recorded",
+      "drone fragment damage recorded",
+      "frame effects bounded",
+      "saved state validates after combat",
+      "laser timer persists in save",
+      "menu pauses all simulation",
+      "five companion skins render",
+      "drone triggers boss phase2 without early reward",
+      "drone final boss kill awards once",
+      "no duplicated reward",
+      "switch mage",
+      "validate mage",
+      "switch warrior",
+      "validate warrior",
+      "switch rogue",
+      "validate rogue",
+      "switch summoner",
+      "validate summoner"
+    ],
+    "meter": {
+      "seconds": 7.000000000000032,
+      "elapsed": 7.000000000000032,
+      "total": 9931329.021384189,
+      "rows": [
+        {
+          "id": "rapidShot",
+          "name": "속사",
+          "recent": 653881.4269884181,
+          "dps": 93411.63242691645,
+          "total": 653881.4269884265,
+          "parts": {
+            "direct": 35788.131546032084,
+            "secondary": 618093.2954423856
+          }
+        },
+        {
+          "id": "sniperShot",
+          "name": "드론",
+          "recent": 1861687.2644038969,
+          "dps": 265955.32348626974,
+          "total": 1861687.2644038552,
+          "parts": {
+            "support": 43243.992284788765,
+            "secondary": 746862.7319928854,
+            "laser": 1071580.540126222
+          }
+        },
+        {
+          "id": "artilleryShot",
+          "name": "포격",
+          "recent": 4765008.467574383,
+          "dps": 680715.4953677659,
+          "total": 4765008.467574462,
+          "parts": {
+            "direct": 4206658.6071928665,
+            "secondary": 558349.8603815555
+          }
+        },
+        {
+          "id": "nuclear",
+          "name": "Nuclear",
+          "recent": 2650751.862417491,
+          "dps": 378678.8374882113,
+          "total": 2650751.862417499,
+          "parts": {
+            "secondary": 2650751.862417491
+          }
+        },
+        {
+          "id": "tacticalStrike",
+          "name": "전술폭격",
+          "recent": 0,
+          "dps": 0,
+          "total": 0,
+          "parts": {}
+        }
+      ],
+      "dps": 1418761.2887691634
+    },
+    "errors": []
+  },
+  "visual": "5 skins x4 frames rendered and reviewed; feet alignment checked for20 frames; desktop/mobile rendered",
+  "scope": "Local testing; no deployment; no physical device thermal/FPS measurement"
+}
