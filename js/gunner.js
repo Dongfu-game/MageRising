@@ -28,7 +28,8 @@ window.MAGE_GUNNER=(()=>{
   let pending=[],visuals=[],poseAt=-10,burstAt=-10,posePriority=-1,lastBodyTarget=null,strikeUntil=0;
   const state=()=>api.state(),levels=()=>state().skillLevels;
   const lv=(id,v=state(),cap=Infinity)=>Math.min(cap,(v.skillLevels[id]||0)?v.skillLevels[id]+api.trait(v):0);
-  const capacity=(v=state())=>Math.min(Number.MAX_SAFE_INTEGER,Math.floor((20+Math.max(0,v.powerLevel-1)+5*lv('extendedMag',v,10))*(1+.05*lv('ammoBelt',v,10))));
+  const capacity=(v=state())=>Math.min(Number.MAX_SAFE_INTEGER,Math.floor((20+Math.max(0,v.powerLevel-1))*(1+.05*lv('ammoBelt',v,10))));
+  const ammoBoost=(v=state())=>1+.1*lv('extendedMag',v,10);
   const reloadTime=(v=state())=>Math.max(1,2*(1-.04*lv('quickReload',v,10)));
   function sync(){const v=state(),g=v.gunner||(v.gunner=blank()),c=capacity(v);if(v.powerLevel>g.powerLevel)g.ammo=Math.min(c,g.ammo+Math.max(0,c-g.capacity));g.powerLevel=v.powerLevel;g.capacity=c;g.ammo=Math.min(c,g.ammo);if(g.droneVersion!==1){g.droneVersion=1;g.timers[1]=Math.min(g.timers[1],.12);g.laserTimer=6;}if(!Number.isFinite(g.laserTimer))g.laserTimer=6;if(!levels().m993)g.laserTimer=6;if(!levels().nuclear)g.nuclearCount=0;if(!levels().tacticalStrike)g.charge=0;return g;}
   const alive=()=>api.enemies().filter(e=>api.target(e)&&e.stage===state().stage&&e.x>=api.hero.x&&e.x<=1000);
@@ -39,19 +40,20 @@ window.MAGE_GUNNER=(()=>{
    const period=i===0?Math.max(.05,.12/(1+speed+.08*lv('gasRegulator',v,5))):i===2?Math.max(1,3/(1+speed+.05*lv('autoFeed',v,5))):1;
    const set=c.setCounts[family]||0,bonus=(set>=2?.1:0)+(set>=5?.1:0);
    let damage=c.attackBase*(i===0?.30*(1+.05*p('m855')+bonus):i===2?4.5*(1+.05*p('m795')+bonus):id==='nuclear'?(2+.3*Math.max(0,p(id)-1))*(1+.1*p('enrichment')+bonus):id==='tacticalStrike'?(18+2*Math.max(0,p(id)-1))*(1+bonus):0);
+   if(i===0||i===2)damage*=ammoBoost(v);
    const crit=Math.min(.6,c.crit+(i===0?.02*lv('zeroing',v,5):0)),critMult=c.critMult,cost=i===2?2+(p('dpicm')?1:0)+(p('excalibur')?1:0):1;
    return {...c,id,family,damage,totalDamage:damage,crit,critMult,cost,cast:period,cooldown:0,interval:period,period,dps:damage/period*(1+crit*(critMult-1)),radius:i===2?90*(1+.03*p('m795'))*(1+c.rangeBonus):id==='nuclear'?85*(1+.04*p('enrichment'))*(1+c.rangeBonus):80*(1+c.rangeBonus),level:p(id)||1,invested:v.skillLevels[id]||0,bonusLevel:0,synergy:0,hitCount:1,reach:815,rangeStart:api.hero.x,unit:c.attackBase,meterEpoch:api.epoch(),ignore:i===0?.02*lv('m995',v,10):0};
   }
-  function laserStats(v=state(),c=api.character(v)){const level=lv('m993',v),width=16*(1+.03*lv('raufoss',v))*(1+c.rangeBonus),period=6-.4*lv('longBarrel',v,5),damage=level?c.attackBase*(2+.2*Math.max(0,level-1))*(1+.05*lv('raufoss',v)):0;return {...stats(ids[1],v,c),damage,totalDamage:damage,period,interval:period,width,ignore:0,crit:0};}
+  function laserStats(v=state(),c=api.character(v)){const level=lv('m993',v),width=16*(1+.03*lv('raufoss',v))*(1+c.rangeBonus),period=6-.4*lv('longBarrel',v,5),damage=level?c.attackBase*(2+.2*Math.max(0,level-1))*(1+.05*lv('raufoss',v))*ammoBoost(v):0;return {...stats(ids[1],v,c),damage,totalDamage:damage,period,interval:period,width,ignore:0,crit:0};}
   function combined(v,c){const main=[stats(ids[0],v,c),stats(ids[2],v,c)],use=main.reduce((n,s)=>n+s.cost/s.period,0),uptime=capacity(v)/(capacity(v)+use*reloadTime(v)),drone=stats(ids[1],v,c),laser=laserStats(v,c),dps=main.reduce((n,s)=>n+s.dps,0)*uptime+drone.dps+(lv('m118',v)?laser.damage/laser.period:0);return {...main[0],...c,dps:dps*(1+c.cardNormal),bossDps:dps*(1+c.bossBonus)};}
-  function hit(e,raw,s,{secondary=false,ignore=s.ignore||0,source=s.id,kind=null}={}){if(e.stage!==state().stage||!api.target(e))return;let amount=raw*(e.boss?1+s.bossBonus:1);if(!secondary){if((e.gunnerMarkUntil||0)>api.time())amount*=1+(e.gunnerMarks||0)*.004*lv('tracer',state(),10);if(Math.random()<s.crit)amount*=s.critMult;}const armor=e.armor??e.stage??0;amount*=(100+armor)/(100+armor*(1-ignore));api.damage(e,amount,s.family,source,kind||(secondary?'secondary':'direct'),s.meterEpoch);}
+  function hit(e,raw,s,{secondary=false,ignore=s.ignore||0,source=s.id,kind=null,critical=false}={}){if(e.stage!==state().stage||!api.target(e))return;let amount=raw*(e.boss?1+s.bossBonus:1);if(!secondary){if((e.gunnerMarkUntil||0)>api.time())amount*=1+(e.gunnerMarks||0)*.004*lv('tracer',state(),10);}if((!secondary||critical)&&Math.random()<s.crit)amount*=s.critMult;const armor=e.armor??e.stage??0;amount*=(100+armor)/(100+armor*(1-ignore));api.damage(e,amount,s.family,source,kind||(secondary?'secondary':'direct'),s.meterEpoch);}
   function flash(x,y,r,color,nuclear=false){if(visuals.filter(f=>f.blast).length>=12)return;visuals.push({blast:true,x,y,r,color,nuclear,age:0,duration:nuclear?.48:.28});}
   function area(pos,r,raw,s,opts={}){const pool=alive();for(const e of pool)if(Math.hypot(e.x-pos.x,e.y-pos.y)<=r){let n=raw;if(opts.center&&Math.hypot(e.x-pos.x,e.y-pos.y)<=r/3)n*=1+.05*lv('fireControl');if(opts.center&&e.boss)n*=1+.03*lv('excalibur');hit(e,n,s,opts);}flash(pos.x,pos.y,r,opts.source==='nuclear'?'#b9e48a':'#e8c796',opts.source==='nuclear');}
-  function fragmentStats(v=state(),c=api.character(v)){const level=lv('m995',v,10);return {count:level?3+Math.floor((level-1)/3):0,radius:(120+10*Math.max(0,level-1))*(1+c.rangeBonus),share:.25};}
+  function fragmentStats(v=state(),c=api.character(v)){const level=lv('m995',v,10);return {count:level?3+Math.floor((level-1)/3):0,radius:(120+10*Math.max(0,level-1))*(1+c.rangeBonus),share:.50};}
   // count controls artwork only. Every other target in the circle is hit once.
   function fragmentTargets(primary,pos,config){return config.count?alive().filter(e=>e!==primary&&Math.hypot(e.x-pos.x,e.y-pos.y)<=config.radius):[];}
   function fragments(pos,targets,s,config,snapshot,stage){if(!config.count||state()!==snapshot||state().stage!==stage||state().dead)return;
-   for(const e of targets)hit(e,s.damage*config.share,s,{secondary:true,ignore:0});
+   for(const e of targets)hit(e,s.damage*config.share,s,{secondary:true,ignore:0,critical:true});
    flash(pos.x,pos.y,config.radius,'#f4d58e');
    const cap=state().lowFX?6:24;for(let j=0;j<config.count&&visuals.filter(f=>f.shard).length<cap;j++){const angle=j*Math.PI*2/config.count;visuals.push({shard:true,x:pos.x,y:pos.y-12,endX:pos.x+config.radius*.8*Math.cos(angle),endY:pos.y-12+config.radius*.8*Math.sin(angle),age:0,duration:.12});}
   }
@@ -71,7 +73,7 @@ window.MAGE_GUNNER=(()=>{
    const shotVisual=visuals.filter(f=>f.projectile).length<32?{projectile:true,index:i,x:origin.x,y:origin.y,endX:pos.x,endY:pos.y-12,age:0,duration:i===2?.5:.12}:null;if(shotVisual)visuals.push(shotVisual);
    const detonate=()=>{if(nuclear){const n=stats('nuclear');area(pos,n.radius,n.damage,n,{secondary:true,source:'nuclear',ignore:0});}};
    if(i===0){lastBodyTarget=target.id;target.gunnerBodyUntil=api.time()+3;const config=fragmentStats(state(),s),targets=config.count?fragmentTargets(target,pos,config):[],snapshot=state(),stage=state().stage;const end=piercingRound(target,pool,origin,s);if(shotVisual){shotVisual.endX=end.x;shotVisual.endY=end.y;}fragments(pos,targets,s,config,snapshot,stage);}
-   if(i===2)queue(.5,()=>{area(pos,s.radius,s.damage,s,{center:true});if(p('dpicm')){const count=Math.min(5,2+Math.floor((lv('dpicm',state(),10)-1)/3));for(let j=0;j<count;j++){const angle=j*2.399,point={x:pos.x+Math.cos(angle)*25,y:pos.y+Math.sin(angle)*15};area(point,45*(1+s.rangeBonus),s.attackBase*4.5*.1,s,{secondary:true,ignore:0});}}detonate();});else detonate();
+   if(i===2)queue(.5,()=>{area(pos,s.radius,s.damage,s,{center:true});if(p('dpicm')){const count=Math.min(5,2+Math.floor((lv('dpicm',state(),10)-1)/3));for(let j=0;j<count;j++){const angle=j*2.399,point={x:pos.x+Math.cos(angle)*25,y:pos.y+Math.sin(angle)*15};area(point,45*(1+s.rangeBonus),s.attackBase*4.5*.1*ammoBoost(),s,{secondary:true,ignore:0});}}detonate();});else detonate();
    api.absorb(s);if(!g.ammo)g.reload=reloadTime();return true;
   }
   const dronePosition=()=>({x:api.hero.x-105,y:api.hero.y-85+(state().lowFX?0:Math.sin(api.time()*2.5)*2)});
