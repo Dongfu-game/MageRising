@@ -18,7 +18,7 @@ $('mapNodes').innerHTML=points.map(([x,y],i)=>{const n=first+i,status=s.cleared.
 const ids=Object.keys(MAGE_CLASSES.jobs),records=Object.fromEntries(ids.map(id=>[id,record(id)]));
 $('mapPawns').innerHTML=ids.map(id=>{const r=records[id];if(Math.floor((r.stage-1)/10)!==page)return '<button class="map-distant '+(r.stage<first?'before':'after')+'" data-map-job="'+id+'">'+(r.stage<first?'◀ ':'▶ ')+MAGE_CLASSES.jobs[id].name+' · '+r.stage+'</button>';
 const [x,y]=points[(r.stage-1)%10],group=ids.filter(k=>records[k].stage===r.stage),offset=(group.indexOf(id)-(group.length-1)/2)*2.3;
-return '<button class="map-pawn '+(id===api.current()?'chosen':'')+'" data-map-job="'+id+'" style="left:'+(x+offset)+'%;top:'+(y-1)+'%" title="'+MAGE_CLASSES.jobs[id].name+' '+r.stage+'단계"><img src="assets/map/'+id+'-default.png" alt="'+MAGE_CLASSES.jobs[id].name+' 기본 캐릭터"/></button>';}).join('');
+return '<button class="map-pawn '+(id===api.current()?'chosen':'')+'" data-map-job="'+id+'" style="left:'+(x+offset)+'%;top:'+(y-1)+'%" title="'+MAGE_CLASSES.jobs[id].name+' '+r.stage+'단계"><img src="'+(id==='gunner'?MAGE_GUNNER.preview('gunner-0'):'assets/map/'+id+'-default.png')+'" alt="'+MAGE_CLASSES.jobs[id].name+' 기본 캐릭터"/></button>';}).join('');
 const guard=end%50===0&&!s.cleared.includes(end),king=end%100===0;
 const palaceBoss=palace?MAGE_GWIMUN.boss(end):null;
 $('mapGuardian').innerHTML=guard&&palaceBoss?'<div class="guardian palace-boss"><img src="assets/gwimun/'+palaceBoss.key+'-1.png" alt="'+palaceBoss.name+' 관문 수호자"/><b>'+end+' · '+palaceBoss.name+'</b></div>':guard?'<div class="guardian '+(king?'king':'soldier')+'"><img src="assets/map/skeleton-'+(king?'king':'warrior')+'-v2.png" alt="'+(king?'해골왕':'해골전사')+' 관문 수호자"/><b>'+end+' · '+(king?'해골왕':'해골전사')+'</b></div>':'';
@@ -33,5 +33,5 @@ root.addEventListener('click',e=>{const job=e.target.closest('[data-map-job]');i
 $('mapPrev').onclick=()=>turn(-1);$('mapNext').onclick=()=>turn(1);$('mapLocate').onclick=locate;$('mapEnter').onclick=()=>{if(selected!==null&&api.enter(selected))close();};$('mapResume').onclick=()=>{if(api.enter(api.snapshot().stage))close();};
 const button=document.createElement('button');button.textContent='🗺 여정 지도';button.className='subtle';button.id='worldMapButton';button.setAttribute('aria-label','여정 지도 열기');button.onclick=open;document.querySelector('.battle-top').insertBefore(button,document.getElementById('classSwitch'));
 const box=$('classSwitch');if(box)box.hidden=true;
-window.MAGE_WORLD_MAP={open,close,record};open();
+window.addEventListener('mage-art-ready',()=>{if(!root.hidden)paint();});window.MAGE_WORLD_MAP={open,close,record};open();
 })();
