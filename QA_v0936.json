@@ -1,0 +1,25 @@
+{
+  "version": "0.9.36",
+  "method": "Node VM execution of actual gunner combat module with deterministic game API fixture",
+  "checks": [
+    "100-monster group: all 99 other targets hit once",
+    "original target excluded from area damage",
+    "all area hits deal 25 percent of raw bullet damage",
+    "area includes rear and side targets",
+    "one bullet consumed and one charge earned",
+    "no recursive damage",
+    "visual count does not cap targets",
+    "level 1 and low FX still hit all 99 other targets",
+    "circular boundary included and outside excluded",
+    "unlearned trait does not produce area damage",
+    "lethal original bullet still releases fragments",
+    "secondary target armor is respected",
+    "unchanged combat stats rapidShot",
+    "unchanged combat stats sniperShot",
+    "unchanged combat stats artilleryShot",
+    "save format unchanged",
+    "radius progression 1",
+    "radius progression 10"
+  ],
+  "errors": []
+}
