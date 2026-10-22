@@ -1,0 +1,26 @@
+{
+  "checks": [
+    "80% failure stops false",
+    "success traverses all six false",
+    "unchanged per hit false",
+    "one round consumed false",
+    "projectile reaches last hit false",
+    "first impact fragments exactly once false",
+    "each direct target once false",
+    "one charge per body round false",
+    "off ray target excluded false",
+    "failure ends chain immediately false",
+    "80% failure stops true",
+    "success traverses all six true",
+    "unchanged per hit true",
+    "one round consumed true",
+    "projectile reaches last hit true",
+    "first impact fragments exactly once true",
+    "each direct target once true",
+    "one charge per body round true",
+    "off ray target excluded true",
+    "failure ends chain immediately true",
+    "seeded mean near five"
+  ],
+  "meanTargets": 4.9802
+}
