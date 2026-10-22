@@ -38,7 +38,7 @@ window.MAGE_GUNNER=(()=>{
    const i=ids.indexOf(id),family=i===0?'energy':i===2?'ice':'cosmic',p=x=>lv(x,v),speed=c.attackSpeed;
    const period=i===0?Math.max(.05,.12/(1+speed+.08*lv('gasRegulator',v,5))):i===2?Math.max(1,3/(1+speed+.05*lv('autoFeed',v,5))):1;
    const set=c.setCounts[family]||0,bonus=(set>=2?.1:0)+(set>=5?.1:0);
-   let damage=c.attackBase*(i===0?.18*(1+.05*p('m855')+bonus):i===2?4.5*(1+.05*p('m795')+bonus):id==='nuclear'?(2+.3*Math.max(0,p(id)-1))*(1+.1*p('enrichment')+bonus):id==='tacticalStrike'?(18+2*Math.max(0,p(id)-1))*(1+bonus):0);
+   let damage=c.attackBase*(i===0?.30*(1+.05*p('m855')+bonus):i===2?4.5*(1+.05*p('m795')+bonus):id==='nuclear'?(2+.3*Math.max(0,p(id)-1))*(1+.1*p('enrichment')+bonus):id==='tacticalStrike'?(18+2*Math.max(0,p(id)-1))*(1+bonus):0);
    const crit=Math.min(.6,c.crit+(i===0?.02*lv('zeroing',v,5):0)),critMult=c.critMult,cost=i===2?2+(p('dpicm')?1:0)+(p('excalibur')?1:0):1;
    return {...c,id,family,damage,totalDamage:damage,crit,critMult,cost,cast:period,cooldown:0,interval:period,period,dps:damage/period*(1+crit*(critMult-1)),radius:i===2?90*(1+.03*p('m795'))*(1+c.rangeBonus):id==='nuclear'?85*(1+.04*p('enrichment'))*(1+c.rangeBonus):80*(1+c.rangeBonus),level:p(id)||1,invested:v.skillLevels[id]||0,bonusLevel:0,synergy:0,hitCount:1,reach:815,rangeStart:api.hero.x,unit:c.attackBase,meterEpoch:api.epoch(),ignore:i===0?.02*lv('m995',v,10):0};
   }

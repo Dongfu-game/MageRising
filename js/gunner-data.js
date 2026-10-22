@@ -2,8 +2,8 @@
 // Additive fifth job. Existing class definitions and save keys are untouched.
 window.MAGE_CLASSES.jobs.gunner={name:'총사',icon:'⌖',first:'m855'};
 window.MAGE_GUNNER_SHOTS=[
- {id:'rapidShot',name:'속사',family:'energy',coef:.18,cast:.12,color:'#efd49c'},
- {id:'sniperShot',name:'드론',family:'fire',coef:.09,cast:.12,color:'#bedef3'},
+ {id:'rapidShot',name:'속사',family:'energy',coef:.30,cast:.12,color:'#efd49c'},
+ {id:'sniperShot',name:'드론',family:'fire',coef:.15,cast:.12,color:'#bedef3'},
  {id:'artilleryShot',name:'포격',family:'ice',coef:4.5,cast:3,color:'#c2d2a8'}
 ].map(n=>({...n,type:'intrinsic',cd:0,radius:n.id==='artilleryShot'?90:0,rank:1,en:n.name,description:'고정 자동 공격 · 속사/드론은 다음 적마다80% 확률 직선 관통 · 파편은 첫 명중만 · 탄종/부품 특성 누적 적용'}));
 window.MAGE_CLASSES.data.gunner=[
