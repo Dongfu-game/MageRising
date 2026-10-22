@@ -5,14 +5,14 @@ window.MAGE_GUNNER_SHOTS=[
  {id:'rapidShot',name:'속사',family:'energy',coef:.18,cast:.12,color:'#efd49c'},
  {id:'sniperShot',name:'드론',family:'fire',coef:.09,cast:.12,color:'#bedef3'},
  {id:'artilleryShot',name:'포격',family:'ice',coef:4.5,cast:3,color:'#c2d2a8'}
-].map(n=>({...n,type:'intrinsic',cd:0,radius:n.id==='artilleryShot'?90:0,rank:1,en:n.name,description:'고정 자동 공격 · 탄종/부품 특성 누적 적용'}));
+].map(n=>({...n,type:'intrinsic',cd:0,radius:n.id==='artilleryShot'?90:0,rank:1,en:n.name,description:'고정 자동 공격 · 속사/드론은 다음 적마다80% 확률 직선 관통 · 파편은 첫 명중만 · 탄종/부품 특성 누적 적용'}));
 window.MAGE_CLASSES.data.gunner=[
  ['energy','속사',[
  ['m855','M855A1 EPR','속사 피해 +5%/Lv'],
  ['gasRegulator','가스 조절기','속사 공속 +8%p/Lv · 최대40%p'],
  ['tracer','M856A1 Tracer','속사 적중 시 3초 표식 · 최대5중첩 · 중첩당 직접탄 피해 +0.4%×Lv · 최대20%'],
  ['zeroing','조준경 영점 조정','속사 치명타 확률 +2%p/Lv · 최대10%p · 최종 상한60%'],
- ['m995','M995 AP · 파편탄','원탄 방어 무시 +2%p/Lv(최대20%) 유지 · 적중 지점 원형 범위의 다른 적 전부에 원탄 기본 피해25% · 대상 수 제한 없음 · 원탄 대상 제외 · 반경120~210(+장비 범위) · 중복/재분열/추가 충전 없음']]],
+ ['m995','M995 AP · 파편탄','원탄 방어 무시 +2%p/Lv(최대20%) 유지 · 탄환의 첫 명중에서만 원형 범위의 다른 적 전부에 원탄 기본 피해25% · 대상 수 제한 없음 · 원탄 대상 제외 · 반경120~210(+장비 범위) · 중복/재분열/추가 충전 없음']]],
  // Legacy IDs retain each node's invested levels, costs and prerequisites.
  ['fire','드론',[
  ['m118','지원사격 프로토콜','Lv1 드론1대 활성화 · 속사와 같은 주기/패시브 · 기본 피해는 속사의50% · 추가Lv당 드론 사격 피해+5% · 자체 전원, 탄약/초월 충전 소모 없음'],
