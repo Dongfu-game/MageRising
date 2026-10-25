@@ -1,0 +1,13 @@
+'use strict';
+window.MAGE_COSMIC=(()=>{
+ const files={stars:['assets/starfall/big-dipper-9frames.png',3,3],rain:['assets/starfall/meteor-shower-right-6frames.png',3,2],birth:['assets/black-hole/lifecycle-8frames.png',4,2],loop:['assets/black-hole/sustain-6frames.png',3,2]},images={},cache=new Map();
+ for(const [key,[path]]of Object.entries(files)){const im=new Image();im.src=path;images[key]=im;}
+ const plan=id=>id==='starfall'?{duration:2.9,hits:[1.1,1.45,1.8]}:{duration:3,hits:[.45,.8,1.15,1.5,1.85]};
+ function frame(key,n){const im=images[key];if(!im.complete||!im.naturalWidth)return null;const k=key+':'+n;if(cache.has(k))return cache.get(k);const [,cols,rows]=files[key],bounds=key==='birth'?[0,430,815,1240,1774]:null,sx=bounds?bounds[n%4]*im.naturalWidth/1774:n%cols*im.naturalWidth/cols,w=bounds?(bounds[n%4+1]-bounds[n%4])*im.naturalWidth/1774:im.naturalWidth/cols,h=im.naturalHeight/rows,c=document.createElement('canvas');c.width=Math.min(512,Math.round(w));c.height=Math.round(h*c.width/w);c.getContext('2d').drawImage(im,sx,Math.floor(n/cols)*h,w,h,0,0,c.width,c.height);cache.set(k,c);return c;}
+ function stamp(ctx,key,n,x,y,w,h,alpha=1,flip=false){const c=frame(key,n);if(!c)return false;ctx.save();ctx.globalAlpha*=alpha;ctx.translate(x,y);if(flip)ctx.scale(-1,1);ctx.drawImage(c,-w/2,-h/2,w,h);ctx.restore();return true;}
+ function dim(ctx,effects,lowFX=false){let a=0;for(const f of effects)if(f.cosmicFX)a=Math.max(a,f.spell==='starfall'?.14*Math.min(1,f.age/.2,Math.max(0,(f.duration-f.age)/.4)):.10*Math.min(1,f.age/.3,Math.max(0,(f.duration-f.age)/.4)));if(a>0){ctx.save();ctx.fillStyle='rgba(3,5,18,'+(lowFX?a*.6:a)+')';ctx.fillRect(0,0,1000,400);ctx.restore();}}
+ function draw(ctx,f,lowFX=false){if(!f.cosmicFX)return false;const t=f.age;if(f.spell==='starfall'){stamp(ctx,'stars',Math.min(8,Math.floor(t/.125)),560,88,360,155,t<1.25?1:Math.max(0,1-(t-1.25)/.5));if(t>=1.1){const q=t-1.1,n=q<.32?Math.floor(q/.16):q<1.05?2+Math.floor(q*8)%2:q<1.4?4:5;stamp(ctx,'rain',n,Math.max(560,Math.min(720,f.x)),190,650,310,Math.min(1,Math.max(0,(f.duration-t)/.35)));}return true;}
+ const x=Math.max(320,Math.min(850,f.x)),y=Math.max(130,f.y-35),w=Math.max(190,Math.min(330,f.r*1.5));if(t<.5)stamp(ctx,'birth',Math.min(3,Math.floor(t/.125)),x,y,w,w*.85);else if(t<2)stamp(ctx,'loop',Math.floor((t-.5)*10)%6,x,y,w,w*.85,1,true);else stamp(ctx,'birth',Math.min(7,4+Math.floor((t-2)/.25)),x,y,w,w*.85,Math.min(1,(3-t)/.2));
+ if(t<2&&!lowFX){ctx.save();ctx.strokeStyle='#c4a2eb90';ctx.lineWidth=1.2;for(let i=0;i<8;i++){const a=i*Math.PI/4+t*1.5,r=90*(1-((t*.8+i/8)%1));ctx.beginPath();ctx.arc(x+Math.cos(a)*r,y+Math.sin(a)*r*.5,1.4,0,Math.PI*2);ctx.stroke();}ctx.restore();}return true;}
+ return {plan,draw,dim,images,frame};
+})();
