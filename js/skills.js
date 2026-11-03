@@ -47,11 +47,11 @@ window.MAGE_SKILLS=(()=>{
  copy('meteor',{family:'ice',rank:2,cost:2}),
  trait('skyReach','넓은 하늘','ice',5,1,'레벨당 하늘 마법 범위 +5%'),
  copy('thunderstorm',{family:'ice',rank:3,cost:3}),
- trait('manaCapacity','마나 확장','lightning',10,1,'마나 자원 기능은 다음 단계에서 적용됩니다.'),
- trait('manaRegen','마나 회복','lightning',10,1,'마나 자원 기능은 다음 단계에서 적용됩니다.'),
+ trait('manaCapacity','마나 확장','lightning',10,1,'레벨당 최대 마나 +20'),
+ trait('manaRegen','마나 회복','lightning',10,1,'충전 중 초당 최대 마나의 10% + 레벨당 1%p 회복'),
  trait('manaPower','마력 증폭','lightning',10,1,'모든 마법 피해 레벨당 +10%'),
- trait('manaSave','마나 절약','lightning',5,1,'마나 자원 기능은 다음 단계에서 적용됩니다.'),
- trait('manaBurst','마나 폭주','lightning',5,1,'마나 자원 기능은 다음 단계에서 적용됩니다.'),
+ trait('manaSave','마나 절약','lightning',5,1,'시전 시 10% + 레벨당 5%p 확률로 소모량의 50% 반환'),
+ trait('manaBurst','마나 폭주','lightning',5,1,'완충 후 5초간 레벨당 마법 피해 +10%'),
  ...nodes.filter(n=>n.family==='cosmic')];
  nodes.splice(0,nodes.length,...rebuilt);for(const k of Object.keys(byId))delete byId[k];Object.assign(byId,Object.fromEntries(nodes.map(n=>[n.id,n])));
  const mageNodes=[...nodes]; const trees=families.map((id,i)=>({id,name:labels[i],color:colors[i],nodes:nodes.filter(n=>n.family===id)}));
@@ -60,8 +60,8 @@ window.MAGE_SKILLS=(()=>{
  const reward=s=>s%100===0?10:s%10===0?5:1;
  const earned=s=>s+4*Math.floor(s/10)+5*Math.floor(s/100);
  const mastered=l=>nodes.filter(n=>n.family!=='cosmic'&&!(window.MAGE_CLASS_ID==='mage'&&['manaCapacity','manaRegen','manaSave','manaBurst'].includes(n.id))).every(n=>l[n.id]===n.max);
- function requirement(id){const n=byId[id];if(!n)return null;const list=trees.find(t=>t.id===n.family).nodes,pos=list.indexOf(n);return{previous:pos?list[pos-1]:null,power:n.family==='cosmic'?0:[0,10,30,50,100][pos],cosmic:n.family==='cosmic'};}
- function available(l,id,powerLevel=Infinity){const n=byId[id],r=requirement(id);if(!n)return false;if(window.MAGE_CLASS_ID==='mage'&&['manaCapacity','manaRegen','manaSave','manaBurst'].includes(id))return false;if(window.MAGE_CLASS_ID==='mage'&&id==='manaPower')return true;return(!r.cosmic||mastered(l))&&(!r.previous||(l[r.previous.id]||0)>=(r.cosmic?r.previous.max:1))&&(r.cosmic||powerLevel>=r.power||(l[id]||0)>0);}
+ function requirement(id){const n=byId[id];if(!n)return null;const list=trees.find(t=>t.id===n.family).nodes,pos=list.indexOf(n);if(window.MAGE_CLASS_ID==='mage'&&n.family==='lightning')return{previous:null,power:0,cosmic:false};return{previous:pos?list[pos-1]:null,power:n.family==='cosmic'?0:[0,10,30,50,100][pos],cosmic:n.family==='cosmic'};}
+ function available(l,id,powerLevel=Infinity){const n=byId[id],r=requirement(id);if(!n)return false;if(window.MAGE_CLASS_ID==='mage'&&n.family==='lightning')return true;return(!r.cosmic||mastered(l))&&(!r.previous||(l[r.previous.id]||0)>=(r.cosmic?r.previous.max:1))&&(r.cosmic||powerLevel>=r.power||(l[id]||0)>0);}
  function synergy(l,id){const n=byId[id];if(window.MAGE_CLASS_ID==='mage'||window.MAGE_CLASS_ID==='gunner'||!n||n.family==='cosmic'||n.type!=='active'||(window.MAGE_CLASS_ID==='warrior'&&n.family==='lightning'))return 0;return nodes.filter(x=>x.type==='active'&&x.family===n.family&&x.id!==id).reduce((sum,x)=>sum+(l[x.id]||0)*(x.rank===2?.03:x.rank===3?.02:n.rank===2?.03:.02),0);}
  const powerTotals=[0],powerLimit=1e100;
  function powerStep(l){return Math.min(powerLimit,Math.pow(1.1,Math.floor((Math.max(1,l)-1)/10)));}
