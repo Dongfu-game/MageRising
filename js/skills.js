@@ -1,6 +1,6 @@
 'use strict';
 window.MAGE_SKILLS=(()=>{
- const families=['energy','fire','ice','lightning','cosmic'],labels=['EARTH','FIRE','ICE','LIGHTNING','TRANSCENDENCE'];
+ const families=['energy','fire','ice','lightning','cosmic'],labels=['땅','바다','하늘','마나','초월'];
  const colors=['#c6a77e','#ffac80','#97eaff','#dfc0ff','#b9cfff'];
  const nodes=[];
  function active(id,name,family,rank,cd,coef,radius,fx,description){nodes.push({id,name,en:name.toUpperCase(),family,rank,max:10,cost:rank,cd,coef,radius,fx,cast:.16+rank*.08,type:'active',color:colors[families.indexOf(family)],symbol:['⛰','♨','❄','ϟ','✴'][families.indexOf(family)],description});}
@@ -31,15 +31,38 @@ window.MAGE_SKILLS=(()=>{
  let byId=Object.fromEntries(nodes.map(n=>[n.id,n]));
  nodes.find(n=>n.id==='lightning').cast=.12;
  for(const n of nodes)if(['energyBolt','magicArrow','arcaneBurst','flameExplosion','iceSpear','chainLightning'].includes(n.id))n.directRework=true;
+
+ // Existing internal family identifiers stay in place for equipment compatibility.
+ const source=Object.fromEntries(nodes.map(n=>[n.id,n]));
+ const copy=(id,patch)=>({...source[id],...patch});
+ const trait=(id,name,family,max,cost,description)=>({id,name,family,max,cost,type:'passive',description,color:colors[families.indexOf(family)]});
+ const rebuilt=[...nodes.filter(n=>n.family==='energy'),
+ copy('fireball',{id:'seaWave',name:'Wave',en:'WAVE',family:'fire',description:'파도가 적에게 순차적으로 피해를 줍니다. 1차 밸런스'}),
+ trait('seaForce','바다의 힘','fire',5,1,'레벨당 바다 마법 피해 +5%'),
+ copy('flameExplosion',{id:'seaTornado',name:'Waterspout',en:'WATERSPOUT',family:'fire',description:'물회오리가 범위 안의 적에게 지속 피해를 줍니다. 1차 밸런스'}),
+ trait('seaReach','넓은 바다','fire',5,1,'레벨당 용오름 범위 +5%'),
+ copy('meteor',{id:'seaTsunami',name:'Tsunami',en:'TSUNAMI',family:'fire',description:'거대한 해일이 전장을 휩씁니다. 1차 밸런스'}),
+ copy('blizzard',{family:'ice',rank:1,cost:1}),
+ trait('skyForce','하늘의 힘','ice',5,1,'레벨당 하늘 마법 피해 +5%'),
+ copy('meteor',{family:'ice',rank:2,cost:2}),
+ trait('skyReach','넓은 하늘','ice',5,1,'레벨당 하늘 마법 범위 +5%'),
+ copy('thunderstorm',{family:'ice',rank:3,cost:3}),
+ trait('manaCapacity','마나 확장','lightning',10,1,'마나 자원 기능은 다음 단계에서 적용됩니다.'),
+ trait('manaRegen','마나 회복','lightning',10,1,'마나 자원 기능은 다음 단계에서 적용됩니다.'),
+ trait('manaPower','마력 증폭','lightning',10,1,'모든 마법 피해 레벨당 +10%'),
+ trait('manaSave','마나 절약','lightning',5,1,'마나 자원 기능은 다음 단계에서 적용됩니다.'),
+ trait('manaBurst','마나 폭주','lightning',5,1,'마나 자원 기능은 다음 단계에서 적용됩니다.'),
+ ...nodes.filter(n=>n.family==='cosmic')];
+ nodes.splice(0,nodes.length,...rebuilt);for(const k of Object.keys(byId))delete byId[k];Object.assign(byId,Object.fromEntries(nodes.map(n=>[n.id,n])));
  const mageNodes=[...nodes]; const trees=families.map((id,i)=>({id,name:labels[i],color:colors[i],nodes:nodes.filter(n=>n.family===id)}));
  const blank=()=>Object.fromEntries(nodes.map(n=>[n.id,n.id===MAGE_CLASSES.jobs[window.MAGE_CLASS_ID||'mage'].first?1:0]));
  const spent=l=>nodes.reduce((s,n)=>s+(l[n.id]||0)*n.cost,0);
  const reward=s=>s%100===0?10:s%10===0?5:1;
  const earned=s=>s+4*Math.floor(s/10)+5*Math.floor(s/100);
- const mastered=l=>nodes.filter(n=>n.family!=='cosmic').every(n=>l[n.id]===n.max);
+ const mastered=l=>nodes.filter(n=>n.family!=='cosmic'&&!(window.MAGE_CLASS_ID==='mage'&&['manaCapacity','manaRegen','manaSave','manaBurst'].includes(n.id))).every(n=>l[n.id]===n.max);
  function requirement(id){const n=byId[id];if(!n)return null;const list=trees.find(t=>t.id===n.family).nodes,pos=list.indexOf(n);return{previous:pos?list[pos-1]:null,power:n.family==='cosmic'?0:[0,10,30,50,100][pos],cosmic:n.family==='cosmic'};}
- function available(l,id,powerLevel=Infinity){const n=byId[id],r=requirement(id);if(!n)return false;return(!r.cosmic||mastered(l))&&(!r.previous||(l[r.previous.id]||0)>=(r.cosmic?r.previous.max:1))&&(r.cosmic||powerLevel>=r.power||(l[id]||0)>0);}
- function synergy(l,id){const n=byId[id];if(window.MAGE_CLASS_ID==='gunner'||!n||n.family==='cosmic'||n.type!=='active'||(window.MAGE_CLASS_ID==='warrior'&&n.family==='lightning'))return 0;return nodes.filter(x=>x.type==='active'&&x.family===n.family&&x.id!==id).reduce((sum,x)=>sum+(l[x.id]||0)*(x.rank===2?.03:x.rank===3?.02:n.rank===2?.03:.02),0);}
+ function available(l,id,powerLevel=Infinity){const n=byId[id],r=requirement(id);if(!n)return false;if(window.MAGE_CLASS_ID==='mage'&&['manaCapacity','manaRegen','manaSave','manaBurst'].includes(id))return false;if(window.MAGE_CLASS_ID==='mage'&&id==='manaPower')return true;return(!r.cosmic||mastered(l))&&(!r.previous||(l[r.previous.id]||0)>=(r.cosmic?r.previous.max:1))&&(r.cosmic||powerLevel>=r.power||(l[id]||0)>0);}
+ function synergy(l,id){const n=byId[id];if(window.MAGE_CLASS_ID==='mage'||window.MAGE_CLASS_ID==='gunner'||!n||n.family==='cosmic'||n.type!=='active'||(window.MAGE_CLASS_ID==='warrior'&&n.family==='lightning'))return 0;return nodes.filter(x=>x.type==='active'&&x.family===n.family&&x.id!==id).reduce((sum,x)=>sum+(l[x.id]||0)*(x.rank===2?.03:x.rank===3?.02:n.rank===2?.03:.02),0);}
  const powerTotals=[0],powerLimit=1e100;
  function powerStep(l){return Math.min(powerLimit,Math.pow(1.1,Math.floor((Math.max(1,l)-1)/10)));}
  function powerGain(l){const q=Math.floor(l/10),r=l%10;if(q>4700)return powerLimit;while(powerTotals.length<=q){const n=powerTotals.length;powerTotals.push(Math.min(powerLimit,powerTotals[n-1]+10*powerStep(n*10)));}return Math.min(powerLimit,powerTotals[q]+r*powerStep(q*10+1));}
@@ -48,8 +71,8 @@ window.MAGE_SKILLS=(()=>{
  function powerQuote(l,gold,bulk){let count=bulk==='max'?Infinity:Number(bulk),n=0,cost=0;while(n<count&&n<100000){const c=powerCost(l+n);if(cost+c>gold||!Number.isFinite(cost+c))break;cost+=c;n++;}return{n,cost};}
  const suffix=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc'];
  function format(v){if(!Number.isFinite(v))return '—';const a=Math.abs(v);if(a<1000)return v.toLocaleString('en-US',{maximumFractionDigits:a<10?2:a<100?1:0});let n=Math.floor(Math.log10(a)/3);if(n>=suffix.length)return v.toExponential(2);let x=v/1000**n;if(Math.abs(Number(x.toFixed(2)))>=1000){n++;x/=1000;}return n<suffix.length?x.toFixed(2)+suffix[n]:v.toExponential(2);}
- const resistanceLabels={gunner:['속사','드론','포격','급탄'],mage:['대지','화염','냉기','번개'],warrior:['베기','찌르기','내려찍기','방어 공격'],rogue:['단검술','궁술','독','기습'],summoner:['야수','정령','언데드','골렘']};
- const resistance=(s,job=window.MAGE_CLASS_ID||'mage')=>{const index=Math.floor((s-1)/5)%(job==='gunner'?3:4);return {family:families[index],value:Math.min(.4,.1+Math.floor((s-1)/20)*.05),label:(resistanceLabels[job]||resistanceLabels.mage)[index]};};
+ const resistanceLabels={gunner:['속사','드론','포격','급탄'],mage:['땅','바다','하늘','땅'],warrior:['베기','찌르기','내려찍기','방어 공격'],rogue:['단검술','궁술','독','기습'],summoner:['야수','정령','언데드','골렘']};
+ const resistance=(s,job=window.MAGE_CLASS_ID||'mage')=>{const index=Math.floor((s-1)/5)%((job==='gunner'||job==='mage')?3:4);return {family:families[index],value:Math.min(.4,.1+Math.floor((s-1)/20)*.05),label:(resistanceLabels[job]||resistanceLabels.mage)[index]};};
  function selectClass(id){nodes.splice(0,nodes.length,...(id==='mage'?mageNodes:MAGE_CLASSES.data[id].flatMap(t=>t.nodes)));for(const k of Object.keys(byId))delete byId[k];Object.assign(byId,Object.fromEntries(nodes.map(n=>[n.id,n])));if(id==='gunner')Object.assign(byId,Object.fromEntries(MAGE_GUNNER_SHOTS.map(n=>[n.id,n])));trees.splice(0,trees.length,...(id==='mage'?families.map((id,i)=>({id,name:labels[i],color:colors[i],nodes:nodes.filter(n=>n.family===id)})):MAGE_CLASSES.data[id]));window.MAGE_CLASS_ID=id;}
  const api={mageNodes,selectClass,nodes,byId,trees,blank,spent,reward,earned,mastered,available,requirement,synergy,powerStep,powerGain,power,powerCost,powerQuote,format,resistance}; selectClass(window.MAGE_CLASS_ID||'mage');return api;
 })();
